@@ -1,0 +1,38 @@
+// javafx-gradle-plugin cannot be used with new plugin DSL (https://github.com/FibreFoX/javafx-gradle-plugin/issues/69)
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath 'de.dynamicfiles.projects.gradle.plugins:javafx-gradle-plugin:8.8.2'
+        classpath 'ch.netzwerg:gradle-release-plugin:1.2.4'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'javafx-gradle-plugin'
+apply plugin: 'ch.netzwerg.release'
+apply plugin: 'application'
+
+apply from: 'gradle/dependencies.gradle'
+
+compileJava.options.encoding = 'UTF-8'
+
+repositories {
+    mavenCentral()
+}
+
+mainClassName = 'ch.fhnw.edu.stec.StecApp'
+
+dependencies {
+    compile libraries.slf4j
+    compile libraries.log4j
+}
+
+jfx {
+    mainClass = mainClassName
+    vendor = 'STEC'
+}
