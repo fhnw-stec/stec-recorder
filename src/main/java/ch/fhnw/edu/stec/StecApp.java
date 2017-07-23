@@ -20,7 +20,10 @@ public final class StecApp extends Application {
     @Override
     public void start(Stage stage) {
 
-        Scene scene = new Scene(new StackPane(new Label("Hey there :-)")));
+        StecModel model = new StecModel();
+        StecController controller = new StecController(model);
+        StecView view = new StecView(model, stage.getOwner(), controller);
+        Scene scene = new Scene(view);
 
         stage.setTitle(TITLE);
         stage.setScene(scene);
