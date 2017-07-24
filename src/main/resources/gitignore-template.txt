@@ -1,0 +1,12 @@
+*.iml
+.idea
+*.log
+*.class
+hs_err_pid*
+.gradle
+build
+out
+classes
+target
+.nb-gradle
+.nb-gradle-properties
