@@ -23,17 +23,17 @@ class StecControllerTest {
         StecController controller = new StecController(model);
 
         File initialDir = tmpFolder.newFolder("initial");
-        model.rootDirectoryProperty().set(initialDir);
+        model.gigDirectoryProperty().set(initialDir);
 
         controller.chooseDirectory(null);
-        assertEquals(initialDir, model.rootDirectoryProperty().get(), "no change if null");
+        assertEquals(initialDir, model.gigDirectoryProperty().get(), "no change if null");
 
         controller.chooseDirectory(tmpFolder.newFile());
-        assertEquals(initialDir, model.rootDirectoryProperty().get(), "no change if not a directory");
+        assertEquals(initialDir, model.gigDirectoryProperty().get(), "no change if not a directory");
 
         File newDir = tmpFolder.newFolder("new");
         controller.chooseDirectory(newDir);
-        assertEquals(newDir, model.rootDirectoryProperty().get());
+        assertEquals(newDir, model.gigDirectoryProperty().get());
     }
 
 }

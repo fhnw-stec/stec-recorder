@@ -30,6 +30,7 @@ repositories {
 mainClassName = 'ch.fhnw.edu.stec.StecApp'
 
 dependencies {
+    compile libraries.jgit
     compile libraries.slf4j
     compile libraries.log4j
 
