@@ -3,6 +3,7 @@ ext {
 }
 
 libraries.jgit = 'org.eclipse.jgit:org.eclipse.jgit:4.8.0.201706111038-r'
+libraries.vavr = 'io.vavr:vavr:0.9.0'
 libraries.slf4j = 'org.slf4j:slf4j-api:1.7.25'
 
 def log4jVersion = '2.8.2'

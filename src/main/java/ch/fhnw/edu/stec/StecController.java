@@ -2,6 +2,7 @@ package ch.fhnw.edu.stec;
 
 import ch.fhnw.edu.stec.chooser.GigChooserController;
 import ch.fhnw.edu.stec.status.GigStatusController;
+import io.vavr.control.Try;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.RepositoryCache;
@@ -14,17 +15,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.Optional;
 
 final class StecController implements GigChooserController, GigStatusController {
 
     private static final Logger LOG = LoggerFactory.getLogger(StecController.class);
-
-    private static final String GIT_REPO = ".git";
-
     private static final String GIT_IGNORE_TEMPLATE_FILE_NAME = "/gitignore-template.txt";
-    private static final String GIT_IGNORE_FILE_NAME = ".gitignore";
-    private static final String GIT_IGNORE_COMMIT_MSG = "Add " + GIT_IGNORE_FILE_NAME;
+    static final String GIT_REPO = ".git";
+    static final String GIT_IGNORE_FILE_NAME = ".gitignore";
+    static final String ADD_GIT_IGNORE_COMMIT_MSG = "Add " + GIT_IGNORE_FILE_NAME;
 
     private final StecModel model;
 
@@ -54,21 +52,21 @@ final class StecController implements GigChooserController, GigStatusController 
     @Override
     public void initGig() {
         if (!model.gigReady().get()) {
-            Optional<Git> optionalGit = initGitRepo(model.gigDirectoryProperty().get());
-            optionalGit.ifPresent(git -> {
+            Try<Git> tryInitGit = initGitRepo(model.gigDirectoryProperty().get());
+            tryInitGit.onSuccess(git -> {
                 model.gigReady().setValue(true);
                 commitGitIgnore(git);
             });
         }
     }
 
-    private static Optional<Git> initGitRepo(File dir) {
+    private static Try<Git> initGitRepo(File dir) {
         try {
-            return Optional.ofNullable(Git.init().setDirectory(dir).call());
+            return Try.success(Git.init().setDirectory(dir).call());
         } catch (GitAPIException e) {
             LOG.error("Git init failed.", e);
+            return Try.failure(e);
         }
-        return Optional.empty();
     }
 
     private static void commitGitIgnore(Git git) {
@@ -79,7 +77,7 @@ final class StecController implements GigChooserController, GigStatusController 
             Files.copy(gitIgnoreSource, gitIgnoreTarget.toPath(), StandardCopyOption.REPLACE_EXISTING);
             git.add().addFilepattern(GIT_IGNORE_FILE_NAME).call();
 
-            git.commit().setMessage(GIT_IGNORE_COMMIT_MSG).call();
+            git.commit().setMessage(ADD_GIT_IGNORE_COMMIT_MSG).call();
 
         } catch (IOException | GitAPIException e) {
             LOG.error("Git commit .gitignore failed.", e);
