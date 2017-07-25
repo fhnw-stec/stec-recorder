@@ -42,3 +42,8 @@ jfx {
     mainClass = mainClassName
     vendor = 'STEC'
 }
+
+release {
+    dependsOn jfxNative
+    push = true
+}
