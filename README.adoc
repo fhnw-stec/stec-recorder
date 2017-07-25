@@ -1,1 +1,1 @@
-# STEC Recorder
+# STEC Recorder image:https://travis-ci.org/fhnw-stec/stec-recorder.svg?branch=master["Build Status", link="https://travis-ci.org/fhnw-stec/stec-recorder"]
