@@ -1,1 +1,29 @@
 # STEC Recorder image:https://travis-ci.org/fhnw-stec/stec-recorder.svg?branch=master["Build Status", link="https://travis-ci.org/fhnw-stec/stec-recorder"]
+
+## IDE
+
+This project is based on Gradle and can thus be imported into most IDEs.
+
+## Command Line
+
+### Run
+
+`./gradlew run`
+
+### Test
+
+`./gradlew test`
+
+## Bundle
+
+`./gradle jfxNative` (see https://github.com/FibreFoX/javafx-gradle-plugin[javafx-gradle-plugin])
+
+## Release
+
+WARNING: Will add and push a new git version tag
+
+`./gradlew release | releaseMinorVersion | releaseMajorVersion`
+
+## License
+
+All source code is available under the link:LICENSE[MIT License].
