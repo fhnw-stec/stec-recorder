@@ -2,6 +2,7 @@ package ch.fhnw.edu.stec.capture;
 
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -19,8 +20,10 @@ public final class StepCaptureView extends HBox{
         tagNameField.setEditable(true);
         tagNameField.setPromptText(STEP_NAME_PROMPT);
 
-        TextField descriptionField = new TextField();
+        TextArea descriptionField = new TextArea();
         descriptionField.setEditable(true);
+        descriptionField.setWrapText(true);
+        descriptionField.setPrefRowCount(3);
         descriptionField.setPromptText(STEP_DESCRIPTION_PROMPT);
 
         Button captureButton = new Button(STEP_CAPTURE_BUTTON_LABEL);

@@ -5,14 +5,13 @@ import ch.fhnw.edu.stec.chooser.GigChooserController;
 import ch.fhnw.edu.stec.status.GigStatusController;
 import io.vavr.control.Try;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import org.eclipse.jgit.api.AddCommand;
-import org.eclipse.jgit.api.CommitCommand;
+import javafx.collections.ObservableMap;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.TagCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.RepositoryCache;
+import org.eclipse.jgit.revwalk.RevTag;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.util.FS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,11 +42,8 @@ final class StecController implements GigChooserController, GigStatusController,
             boolean isInitialized = RepositoryCache.FileKey.isGitRepository(gitRepo, FS.detect());
             this.model.gigReady().setValue(isInitialized);
             if (isInitialized){
-                Map snapshots = getSteps();
+                ObservableMap snapshots = FXCollections.observableMap(getSteps());
                 model.snapshots().setValue(snapshots);
-
-                ObservableList<String> tag_names = FXCollections.observableArrayList(new ArrayList(snapshots.keySet()));
-                model.snapshots_names().setValue(tag_names);
             }
         });
 
@@ -119,7 +114,7 @@ final class StecController implements GigChooserController, GigStatusController,
         }
     }
 
-    private Map getSteps() {
+    private Map<String, String> getSteps() {
         try {
             Git git = Git.open(model.gigDirectoryProperty().get());
             Map<String, Ref> tags = git.getRepository().getTags();
@@ -127,10 +122,28 @@ final class StecController implements GigChooserController, GigStatusController,
             for (String key : tags.keySet()) {
                 LOG.debug(key);
             }
-            return tags;
+
+            return getDescriptions(git, tags);
         } catch (IOException e){
             LOG.error("Fetching all tags failed.", e);
-            return new HashMap<String, Ref>();
+            return new HashMap<String, String>();
+        }
+    }
+
+    private Map<String, String> getDescriptions(Git git, Map<String, Ref> tags){
+
+        Map<String, String> describedTags = new HashMap<>();
+        try {
+            RevWalk walk = new RevWalk(git.getRepository());
+            for (String tagName : tags.keySet()) {
+                Ref ref = tags.get(tagName);
+                RevTag tag = walk.parseTag(ref.getObjectId());
+                describedTags.put(tagName, tag.getFullMessage());
+            }
+            return describedTags;
+        } catch (IOException e) {
+            LOG.error("Fetching tag descriptions failed", e);
+            return describedTags;
         }
     }
 

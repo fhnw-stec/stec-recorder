@@ -3,12 +3,19 @@ package ch.fhnw.edu.stec;
 import ch.fhnw.edu.stec.capture.StepCaptureView;
 import ch.fhnw.edu.stec.chooser.GigChooserView;
 import ch.fhnw.edu.stec.status.GigStatusView;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
+
+import java.util.ArrayList;
+import java.util.Map;
 
 import static ch.fhnw.edu.stec.util.Labels.GIG_SECTION_TITLE;
 import static ch.fhnw.edu.stec.util.Labels.SNAPSHOT_SECTION_TITLE;
@@ -33,7 +40,16 @@ final class StecView extends VBox {
         snapshotPane.disableProperty().bind(model.gigReady().not());
 
         ListView<String> list = new ListView<>();
-        model.snapshots_names().addListener((observable, oldValue, newValue) -> list.setItems(newValue));
+        model.snapshots().addListener(new ChangeListener<ObservableMap<String, String>>() {
+                                          @Override
+                                          public void changed(ObservableValue<? extends ObservableMap<String, String>> observable, ObservableMap<String, String> oldValue, ObservableMap<String, String> newValue) {
+                                              ArrayList<String> stringList = new ArrayList<>();
+                                              for (Map.Entry<String, String> entry : newValue.entrySet()){
+                                                  stringList.add(entry.getKey() + ": " + entry.getValue());
+                                              }
+                                              list.setItems(FXCollections.observableArrayList(stringList));
+                                          }
+                                      });
         snapshotPane.setContent(list);
 
         TitledPane capturePane = new TitledPane(CAPTURE_SECTION_TITLE, new VBox(stepCaptureView));
