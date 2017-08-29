@@ -40,16 +40,13 @@ final class StecView extends VBox {
         snapshotPane.disableProperty().bind(model.gigReady().not());
 
         ListView<String> list = new ListView<>();
-        model.snapshots().addListener(new ChangeListener<ObservableMap<String, String>>() {
-                                          @Override
-                                          public void changed(ObservableValue<? extends ObservableMap<String, String>> observable, ObservableMap<String, String> oldValue, ObservableMap<String, String> newValue) {
-                                              ArrayList<String> stringList = new ArrayList<>();
-                                              for (Map.Entry<String, String> entry : newValue.entrySet()){
-                                                  stringList.add(entry.getKey() + ": " + entry.getValue());
-                                              }
-                                              list.setItems(FXCollections.observableArrayList(stringList));
-                                          }
-                                      });
+        model.snapshots().addListener((arg0, oldVal, newValue) -> {
+                ArrayList<String> stringList = new ArrayList<>();
+                for (Map.Entry<String, String> entry : newValue.entrySet()){
+                      stringList.add(entry.getKey() + ": " + entry.getValue());
+                  }
+                  list.setItems(FXCollections.observableArrayList(stringList));
+        });
         snapshotPane.setContent(list);
 
         TitledPane capturePane = new TitledPane(CAPTURE_SECTION_TITLE, new VBox(stepCaptureView));
