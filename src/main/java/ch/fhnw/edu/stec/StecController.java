@@ -1,5 +1,6 @@
 package ch.fhnw.edu.stec;
 
+import ch.fhnw.edu.stec.capture.StepCaptureController;
 import ch.fhnw.edu.stec.chooser.GigChooserController;
 import ch.fhnw.edu.stec.status.GigStatusController;
 import io.vavr.control.Try;
@@ -8,6 +9,7 @@ import javafx.collections.ObservableList;
 import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.TagCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.RepositoryCache;
@@ -24,7 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-final class StecController implements GigChooserController, GigStatusController {
+final class StecController implements GigChooserController, GigStatusController, StepCaptureController {
 
     private static final Logger LOG = LoggerFactory.getLogger(StecController.class);
     private static final String GIT_IGNORE_TEMPLATE_FILE_NAME = "/gitignore-template.txt";
@@ -99,16 +101,34 @@ final class StecController implements GigChooserController, GigStatusController 
         }
     }
 
+    @Override
+    public void captureStep(String tagName, String description) {
+        try {
+            Git git = Git.open(model.gigDirectoryProperty().get());
+
+            git.add().addFilepattern(".").call();
+            git.add().setUpdate(true).addFilepattern(".").call();
+
+            git.commit().setMessage("Captured step").call();
+
+            git.tag().setName(tagName).setMessage(description).call();
+
+            getSteps();
+        } catch (GitAPIException | IOException e){
+            LOG.error("Capturing a step failed.", e);
+        }
+    }
+
     private Map getSteps() {
         try {
             Git git = Git.open(model.gigDirectoryProperty().get());
             Map<String, Ref> tags = git.getRepository().getTags();
-            LOG.debug("Got all tags");
+            LOG.info("Got all tags");
             for (String key : tags.keySet()) {
                 LOG.debug(key);
             }
             return tags;
-        } catch (Exception e){
+        } catch (IOException e){
             LOG.error("Fetching all tags failed.", e);
             return new HashMap<String, Ref>();
         }
