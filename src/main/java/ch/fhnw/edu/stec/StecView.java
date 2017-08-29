@@ -4,6 +4,7 @@ import ch.fhnw.edu.stec.chooser.GigChooserView;
 import ch.fhnw.edu.stec.status.GigStatusView;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
@@ -27,6 +28,11 @@ final class StecView extends VBox {
         TitledPane snapshotPane = new TitledPane(SNAPSHOT_SECTION_TITLE, new Group());
         snapshotPane.setCollapsible(false);
         snapshotPane.disableProperty().bind(model.gigReady().not());
+
+        ListView<String> list = new ListView<>();
+        model.snapshots_names().addListener((observable, oldValue, newValue) -> list.setItems(newValue));
+        snapshotPane.setContent(list);
+
 
         getChildren().addAll(gigPane, snapshotPane);
 
