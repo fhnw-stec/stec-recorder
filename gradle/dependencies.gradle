@@ -13,11 +13,12 @@ libraries.log4j = [
         "org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion"
 ]
 
-def junitPlatformVersion = '1.0.0-M6'
-def junitJupiterVersion  = '5.0.0-M6'
+def junitPlatformVersion = '1.0.0'
+def junitJupiterVersion  = '5.0.0'
 libraries.junit = [
         "org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}",
         "org.junit.platform:junit-platform-runner:${junitPlatformVersion}",
+        "org.junit.platform:junit-platform-console:${junitPlatformVersion}",
         "org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}",
         "org.junit.jupiter:junit-jupiter-migrationsupport:${junitJupiterVersion}"
 ]

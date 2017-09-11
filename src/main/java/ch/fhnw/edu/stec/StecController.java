@@ -37,36 +37,39 @@ final class StecController implements GigChooserController, GigStatusController,
     StecController(StecModel model) {
         this.model = model;
 
-        this.model.gigDirectoryProperty().addListener((observable, oldRootDir, newRootDir) -> {
-            File gitRepo = new File(newRootDir, GIT_REPO);
-            boolean isInitialized = RepositoryCache.FileKey.isGitRepository(gitRepo, FS.detect());
-            this.model.gigReady().setValue(isInitialized);
-            if (isInitialized){
-                ObservableMap snapshots = FXCollections.observableMap(getSteps());
-                model.snapshots().setValue(snapshots);
-            }
-        });
-
         initModel();
     }
 
     private void initModel() {
-        model.gigDirectoryProperty().set(new File(System.getProperty("user.home")));
+        chooseDirectory(new File(System.getProperty("user.home")));
     }
 
     @Override
     public void chooseDirectory(File dir) {
-        if (dir != null && dir.isDirectory()) {
-            model.gigDirectoryProperty().set(dir);
+        if (dir == null) {
+            model.gigDirProperty().setValue(new StecModel.InvalidGigDir(new File("")));
+        } else if (!dir.isDirectory()) {
+            model.gigDirProperty().setValue(new StecModel.InvalidGigDir(dir));
+        }else {
+            File gitRepo = new File(dir, GIT_REPO);
+            boolean isInitialized = RepositoryCache.FileKey.isGitRepository(gitRepo, FS.detect());
+            if (isInitialized) {
+                model.gigDirProperty().setValue(new StecModel.ReadyGigDir(dir));
+                ObservableMap snapshots = FXCollections.observableMap(getSteps());
+                model.snapshots().setValue(snapshots);
+            } else {
+                model.gigDirProperty().setValue(new StecModel.UninitializedGigDir(dir));
+            }
         }
     }
 
     @Override
     public void initGig() {
-        if (!model.gigReady().get()) {
-            Try<Git> tryInitGit = initGitRepo(model.gigDirectoryProperty().get());
+        if (model.gigDirProperty().get() instanceof StecModel.UninitializedGigDir) {
+            File dir = model.gigDirProperty().get().getDir();
+            Try<Git> tryInitGit = initGitRepo(dir);
             tryInitGit.onSuccess(git -> {
-                model.gigReady().setValue(true);
+                model.gigDirProperty().setValue(new StecModel.ReadyGigDir(dir));
                 commitGitIgnore(git);
             });
         }
@@ -99,7 +102,7 @@ final class StecController implements GigChooserController, GigStatusController,
     @Override
     public void captureStep(String tagName, String description) {
         try {
-            Git git = Git.open(model.gigDirectoryProperty().get());
+            Git git = Git.open(model.gigDirProperty().get().getDir());
 
             git.add().addFilepattern(".").call();
             git.add().setUpdate(true).addFilepattern(".").call();
@@ -109,14 +112,14 @@ final class StecController implements GigChooserController, GigStatusController,
             git.tag().setName(tagName).setMessage(description).call();
 
             getSteps();
-        } catch (GitAPIException | IOException e){
+        } catch (GitAPIException | IOException e) {
             LOG.error("Capturing a step failed.", e);
         }
     }
 
     private Map<String, String> getSteps() {
         try {
-            Git git = Git.open(model.gigDirectoryProperty().get());
+            Git git = Git.open(model.gigDirProperty().get().getDir());
             Map<String, Ref> tags = git.getRepository().getTags();
             LOG.info("Got all tags");
             for (String key : tags.keySet()) {
@@ -124,13 +127,13 @@ final class StecController implements GigChooserController, GigStatusController,
             }
 
             return getDescriptions(git, tags);
-        } catch (IOException e){
+        } catch (IOException e) {
             LOG.error("Fetching all tags failed.", e);
             return new HashMap<String, String>();
         }
     }
 
-    private Map<String, String> getDescriptions(Git git, Map<String, Ref> tags){
+    private Map<String, String> getDescriptions(Git git, Map<String, Ref> tags) {
 
         Map<String, String> describedTags = new HashMap<>();
         try {

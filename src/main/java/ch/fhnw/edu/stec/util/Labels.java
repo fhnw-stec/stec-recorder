@@ -9,8 +9,9 @@ public interface Labels {
     String DIR_CHOOSER_BUTTON_LABEL = "...";
     String INIT_BUTTON_LABEL = "Initialize";
 
-    String GIG_READY_LABEL = "Ready";
-    String GIG_NOT_READY_LABEL = "Not Initialized";
+    String INVALID_GIG_DIR_LABEL = "Not a directory";
+    String UNINITIALIZED_GIG_DIR_LABEL = "Not initialized";
+    String READY_GIG_DIR_LABEL = "Gig directory ready";
 
     String STEP_NAME_LABEL = "Step Name";
     String STEP_NAME_PROMPT = "Enter a short name for the step here";
