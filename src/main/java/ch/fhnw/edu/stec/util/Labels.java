@@ -3,7 +3,7 @@ package ch.fhnw.edu.stec.util;
 public interface Labels {
 
     String GIG_SECTION_TITLE = "Gig Directory";
-    String SNAPSHOT_SECTION_TITLE = "Snapshots";
+    String STEPS_SECTION_TITLE = "Steps";
     String CAPTURE_SECTION_TITLE = "Capture Step";
 
     String DIR_CHOOSER_BUTTON_LABEL = "...";

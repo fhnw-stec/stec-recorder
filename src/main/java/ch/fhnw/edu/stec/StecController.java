@@ -2,10 +2,13 @@ package ch.fhnw.edu.stec;
 
 import ch.fhnw.edu.stec.capture.StepCaptureController;
 import ch.fhnw.edu.stec.chooser.GigChooserController;
+import ch.fhnw.edu.stec.model.GigDir;
+import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.status.GigStatusController;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.Map;
+import io.vavr.collection.Seq;
 import io.vavr.control.Try;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableMap;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
@@ -21,58 +24,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
-import java.util.Map;
 
 final class StecController implements GigChooserController, GigStatusController, StepCaptureController {
 
-    private static final Logger LOG = LoggerFactory.getLogger(StecController.class);
-    private static final String GIT_IGNORE_TEMPLATE_FILE_NAME = "/gitignore-template.txt";
     static final String GIT_REPO = ".git";
     static final String GIT_IGNORE_FILE_NAME = ".gitignore";
     static final String ADD_GIT_IGNORE_COMMIT_MSG = "Add " + GIT_IGNORE_FILE_NAME;
-
+    private static final Logger LOG = LoggerFactory.getLogger(StecController.class);
+    private static final String GIT_IGNORE_TEMPLATE_FILE_NAME = "/gitignore-template.txt";
     private final StecModel model;
 
     StecController(StecModel model) {
         this.model = model;
 
         initModel();
-    }
-
-    private void initModel() {
-        chooseDirectory(new File(System.getProperty("user.home")));
-    }
-
-    @Override
-    public void chooseDirectory(File dir) {
-        if (dir == null) {
-            model.gigDirProperty().setValue(new StecModel.InvalidGigDir(new File("")));
-        } else if (!dir.isDirectory()) {
-            model.gigDirProperty().setValue(new StecModel.InvalidGigDir(dir));
-        }else {
-            File gitRepo = new File(dir, GIT_REPO);
-            boolean isInitialized = RepositoryCache.FileKey.isGitRepository(gitRepo, FS.detect());
-            if (isInitialized) {
-                model.gigDirProperty().setValue(new StecModel.ReadyGigDir(dir));
-                ObservableMap snapshots = FXCollections.observableMap(getSteps());
-                model.snapshots().setValue(snapshots);
-            } else {
-                model.gigDirProperty().setValue(new StecModel.UninitializedGigDir(dir));
-            }
-        }
-    }
-
-    @Override
-    public void initGig() {
-        if (model.gigDirProperty().get() instanceof StecModel.UninitializedGigDir) {
-            File dir = model.gigDirProperty().get().getDir();
-            Try<Git> tryInitGit = initGitRepo(dir);
-            tryInitGit.onSuccess(git -> {
-                model.gigDirProperty().setValue(new StecModel.ReadyGigDir(dir));
-                commitGitIgnore(git);
-            });
-        }
     }
 
     private static Try<Git> initGitRepo(File dir) {
@@ -99,6 +64,45 @@ final class StecController implements GigChooserController, GigStatusController,
         }
     }
 
+    private void initModel() {
+        chooseDirectory(new File(System.getProperty("user.home")));
+    }
+
+    @Override
+    public void chooseDirectory(File dir) {
+        if (dir == null) {
+            model.gigDirProperty().setValue(new GigDir.InvalidGigDir(new File("")));
+        } else if (!dir.isDirectory()) {
+            model.gigDirProperty().setValue(new GigDir.InvalidGigDir(dir));
+        } else {
+            File gitRepo = new File(dir, GIT_REPO);
+            boolean isInitialized = RepositoryCache.FileKey.isGitRepository(gitRepo, FS.detect());
+            if (isInitialized) {
+                model.gigDirProperty().setValue(new GigDir.ReadyGigDir(dir));
+                try {
+                    Git git = Git.open(model.gigDirProperty().get().getDir());
+                    model.steps().setAll(loadSteps(git).asJava());
+                } catch (IOException e) {
+                    LOG.error("Loading existing steps failed", e);
+                }
+            } else {
+                model.gigDirProperty().setValue(new GigDir.UninitializedGigDir(dir));
+            }
+        }
+    }
+
+    @Override
+    public void initGig() {
+        if (model.gigDirProperty().get() instanceof GigDir.UninitializedGigDir) {
+            File dir = model.gigDirProperty().get().getDir();
+            Try<Git> tryInitGit = initGitRepo(dir);
+            tryInitGit.onSuccess(git -> {
+                model.gigDirProperty().setValue(new GigDir.ReadyGigDir(dir));
+                commitGitIgnore(git);
+            });
+        }
+    }
+
     @Override
     public void captureStep(String tagName, String description) {
         try {
@@ -111,42 +115,26 @@ final class StecController implements GigChooserController, GigStatusController,
 
             git.tag().setName(tagName).setMessage(description).call();
 
-            getSteps();
+            model.steps().setAll(loadSteps(git).asJava());
         } catch (GitAPIException | IOException e) {
             LOG.error("Capturing a step failed.", e);
         }
     }
 
-    private Map<String, String> getSteps() {
-        try {
-            Git git = Git.open(model.gigDirProperty().get().getDir());
-            Map<String, Ref> tags = git.getRepository().getTags();
-            LOG.info("Got all tags");
-            for (String key : tags.keySet()) {
-                LOG.debug(key);
-            }
-
-            return getDescriptions(git, tags);
-        } catch (IOException e) {
-            LOG.error("Fetching all tags failed.", e);
-            return new HashMap<String, String>();
-        }
+    private static Seq<Step> loadSteps(Git git) {
+        Map<String, Ref> tags = HashMap.ofAll(git.getRepository().getTags());
+        RevWalk walk = new RevWalk(git.getRepository());
+        return tags.flatMap(tag -> loadStep(walk, tag._1, tag._2));
     }
 
-    private Map<String, String> getDescriptions(Git git, Map<String, Ref> tags) {
-
-        Map<String, String> describedTags = new HashMap<>();
+    private static Try<Step> loadStep(RevWalk walk, String tagName, Ref tagRef) {
         try {
-            RevWalk walk = new RevWalk(git.getRepository());
-            for (String tagName : tags.keySet()) {
-                Ref ref = tags.get(tagName);
-                RevTag tag = walk.parseTag(ref.getObjectId());
-                describedTags.put(tagName, tag.getFullMessage());
-            }
-            return describedTags;
-        } catch (IOException e) {
-            LOG.error("Fetching tag descriptions failed", e);
-            return describedTags;
+            RevTag revTag = walk.parseTag(tagRef.getObjectId());
+            Step step = new Step(tagName, revTag.getFullMessage());
+            return Try.success(step);
+        } catch (Throwable t) {
+            LOG.error("Loading step details failed", t);
+            return Try.failure(t);
         }
     }
 

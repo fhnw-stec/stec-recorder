@@ -1,6 +1,6 @@
 package ch.fhnw.edu.stec.chooser;
 
-import ch.fhnw.edu.stec.StecModel;
+import ch.fhnw.edu.stec.model.GigDir;
 import ch.fhnw.edu.stec.util.Labels;
 import javafx.beans.property.ObjectProperty;
 import javafx.geometry.Insets;
@@ -12,8 +12,6 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Window;
 
 import java.io.File;
-
-import static ch.fhnw.edu.stec.StecModel.GigDir;
 
 public final class GigChooserView extends HBox {
 
@@ -29,13 +27,11 @@ public final class GigChooserView extends HBox {
 
         rootDirectoryValueField.setText(gigDirProperty.get().getDir().getAbsolutePath());
 
-        rootDirectoryValueField.textProperty().addListener((observable, oldValue, newValue) -> {
-            controller.chooseDirectory(new File(newValue));
-        });
+        rootDirectoryValueField.textProperty().addListener((observable, oldValue, newValue) -> controller.chooseDirectory(new File(newValue)));
 
         DirectoryChooser directoryChooser = new DirectoryChooser();
 
-        if (!(gigDirProperty.get() instanceof StecModel.InvalidGigDir)) {
+        if (!(gigDirProperty.get() instanceof GigDir.InvalidGigDir)) {
             directoryChooser.setInitialDirectory(gigDirProperty.get().getDir());
         }
 

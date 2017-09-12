@@ -1,6 +1,6 @@
 package ch.fhnw.edu.stec.status;
 
-import ch.fhnw.edu.stec.StecModel;
+import ch.fhnw.edu.stec.model.GigDir;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.StringBinding;
@@ -20,7 +20,7 @@ public final class GigStatusView extends BorderPane {
     private static final String SYMBOL_CHECK_MARK = "\u2713";
     private static final String SYMBOL_X_MARK = "\u2717";
 
-    public GigStatusView(ObjectProperty<StecModel.GigDir> gigDirProperty, GigStatusController controller) {
+    public GigStatusView(ObjectProperty<GigDir> gigDirProperty, GigStatusController controller) {
 
         setPadding(new Insets(5));
 
@@ -29,7 +29,7 @@ public final class GigStatusView extends BorderPane {
         label.textFillProperty().bind(dynamicColor(gigDirProperty));
 
         Button button = new Button(INIT_BUTTON_LABEL);
-        button.visibleProperty().bind(Bindings.createBooleanBinding(() -> gigDirProperty.get() instanceof StecModel.UninitializedGigDir, gigDirProperty));
+        button.visibleProperty().bind(Bindings.createBooleanBinding(() -> gigDirProperty.get() instanceof GigDir.UninitializedGigDir, gigDirProperty));
         button.setOnAction(e -> controller.initGig());
 
         label.prefHeightProperty().bind(button.heightProperty());
@@ -40,18 +40,18 @@ public final class GigStatusView extends BorderPane {
         setCenter(center);
     }
 
-    private ObjectBinding<Color> dynamicColor(ObjectProperty<StecModel.GigDir> gigReadyProperty) {
+    private ObjectBinding<Color> dynamicColor(ObjectProperty<GigDir> gigReadyProperty) {
         return Bindings.createObjectBinding(
-                () -> gigReadyProperty.get() instanceof StecModel.ReadyGigDir ? Color.GREEN : Color.DARKRED,
+                () -> gigReadyProperty.get() instanceof GigDir.ReadyGigDir ? Color.GREEN : Color.DARKRED,
                 gigReadyProperty);
     }
 
-    private static StringBinding dynamicLabel(ObjectProperty<StecModel.GigDir> gigReadyProperty) {
+    private static StringBinding dynamicLabel(ObjectProperty<GigDir> gigReadyProperty) {
         return Bindings.createStringBinding(
                 () -> {
-                    if (gigReadyProperty.get() instanceof StecModel.InvalidGigDir) {
+                    if (gigReadyProperty.get() instanceof GigDir.InvalidGigDir) {
                         return SYMBOL_X_MARK + " " + INVALID_GIG_DIR_LABEL;
-                    } else if (gigReadyProperty.get() instanceof StecModel.UninitializedGigDir){
+                    } else if (gigReadyProperty.get() instanceof GigDir.UninitializedGigDir){
                         return SYMBOL_X_MARK + " " + UNINITIALIZED_GIG_DIR_LABEL;
                     } else {
                         return SYMBOL_CHECK_MARK + " " + READY_GIG_DIR_LABEL;
