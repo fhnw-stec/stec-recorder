@@ -8,7 +8,10 @@ import ch.fhnw.edu.stec.steps.StepTableView;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.geometry.Insets;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TitledPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 
@@ -23,24 +26,26 @@ final class StecView extends VBox {
 
         GigChooserView gigChooserView = new GigChooserView(model.gigDirProperty(), owner, controller);
 
-        BooleanBinding gigReady = Bindings.createBooleanBinding(() -> (model.gigDirProperty().get() instanceof GigDir.ReadyGigDir), model.gigDirProperty());
-
         GigStatusView gigStatusView = new GigStatusView(model.gigDirProperty(), controller);
         StepCaptureView stepCaptureView = new StepCaptureView(controller);
+        StepTableView stepTableView = new StepTableView(model.steps());
 
         TitledPane gigPane = new TitledPane(GIG_SECTION_TITLE, new VBox(gigChooserView, gigStatusView));
         gigPane.setCollapsible(false);
 
-        TitledPane stepsPane = new TitledPane(STEPS_SECTION_TITLE, new StepTableView(model.steps()));
-        stepsPane.setCollapsible(false);
-        stepsPane.disableProperty().bind(gigReady.not());
+        Tab stepCaptureTab = new Tab(TAB_TITLE_CAPTURE_STEP, stepCaptureView);
+        stepCaptureTab.setClosable(false);
 
-        TitledPane capturePane = new TitledPane(CAPTURE_SECTION_TITLE, new VBox(stepCaptureView));
-        capturePane.setCollapsible(false);
-        capturePane.disableProperty().bind(gigReady.not());
+        Tab stepTableTab = new Tab(TAB_TITLE_EXISTING_STEPS, stepTableView);
+        stepTableTab.setClosable(false);
 
+        TabPane tabPane = new TabPane(stepCaptureTab, stepTableTab);
 
-        getChildren().addAll(gigPane, stepsPane, capturePane);
+        BooleanBinding gigReady = Bindings.createBooleanBinding(() -> (model.gigDirProperty().get() instanceof GigDir.ReadyGigDir), model.gigDirProperty());
+        tabPane.disableProperty().bind(gigReady.not());
+
+        VBox.setVgrow(tabPane, Priority.ALWAYS);
+        getChildren().addAll(gigPane, tabPane);
 
     }
 

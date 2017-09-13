@@ -3,8 +3,8 @@ package ch.fhnw.edu.stec.util;
 public interface Labels {
 
     String GIG_SECTION_TITLE = "Gig Directory";
-    String STEPS_SECTION_TITLE = "Steps";
-    String CAPTURE_SECTION_TITLE = "Capture Step";
+    String TAB_TITLE_CAPTURE_STEP = "Capture Step";
+    String TAB_TITLE_EXISTING_STEPS = "Existing Steps";
 
     String DIR_CHOOSER_BUTTON_LABEL = "...";
     String INIT_BUTTON_LABEL = "Initialize";
@@ -13,10 +13,10 @@ public interface Labels {
     String UNINITIALIZED_GIG_DIR_LABEL = "Not initialized";
     String READY_GIG_DIR_LABEL = "Gig directory ready";
 
-    String STEP_NAME_LABEL = "Step Name";
-    String STEP_NAME_PROMPT = "Enter a short name for the step here";
-    String STEP_DESCRIPTION_LABEL = "Step Description";
-    String STEP_DESCRIPTION_PROMPT = "Enter a description for the step here";
+    String STEP_TITLE_PROMPT = "Step Title";
+    String STEP_DESCRIPTION_PROMPT = "Step Description";
     String STEP_CAPTURE_BUTTON_LABEL = "Capture";
+
+    String COMMIT_MSG = "Captured with https://github.com/fhnw-stec/stec-recorder";
 
 }

@@ -5,6 +5,7 @@ import ch.fhnw.edu.stec.chooser.GigChooserController;
 import ch.fhnw.edu.stec.model.GigDir;
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.status.GigStatusController;
+import ch.fhnw.edu.stec.util.Labels;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
 import io.vavr.collection.Seq;
@@ -32,6 +33,7 @@ final class StecController implements GigChooserController, GigStatusController,
     static final String ADD_GIT_IGNORE_COMMIT_MSG = "Add " + GIT_IGNORE_FILE_NAME;
     private static final Logger LOG = LoggerFactory.getLogger(StecController.class);
     private static final String GIT_IGNORE_TEMPLATE_FILE_NAME = "/gitignore-template.txt";
+    private static final String README_FILE_NAME = "README.adoc";
     private final StecModel model;
 
     StecController(StecModel model) {
@@ -104,20 +106,25 @@ final class StecController implements GigChooserController, GigStatusController,
     }
 
     @Override
-    public void captureStep(String tagName, String description) {
+    public void captureStep(String title, String description) {
         try {
-            Git git = Git.open(model.gigDirProperty().get().getDir());
+            File dir = model.gigDirProperty().get().getDir();
+            Git git = Git.open(dir);
+
+            Files.write(new File(dir, README_FILE_NAME).toPath(), description.getBytes());
 
             git.add().addFilepattern(".").call();
             git.add().setUpdate(true).addFilepattern(".").call();
 
-            git.commit().setMessage("Captured step").call();
+            git.commit().setMessage(Labels.COMMIT_MSG).call();
 
-            git.tag().setName(tagName).setMessage(description).call();
+            // TODO: Auto-generation of next available tag
+            String tagName = "step-42";
+            git.tag().setName(tagName).setMessage(title).call();
 
             model.steps().setAll(loadSteps(git).asJava());
         } catch (GitAPIException | IOException e) {
-            LOG.error("Capturing a step failed.", e);
+            LOG.error("Capturing step failed.", e);
         }
     }
 
