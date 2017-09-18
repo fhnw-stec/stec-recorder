@@ -1,5 +1,7 @@
 package ch.fhnw.edu.stec.capture;
 
+import ch.fhnw.edu.stec.notification.NotificationController;
+import io.vavr.control.Try;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
@@ -11,7 +13,7 @@ import static ch.fhnw.edu.stec.util.Labels.*;
 
 public final class StepCaptureView extends VBox {
 
-    public StepCaptureView(StepCaptureController controller) {
+    public StepCaptureView(StepCaptureController captureController, NotificationController notificationController) {
 
         setSpacing(5);
         setPadding(new Insets(5, 0, 5, 5));
@@ -29,8 +31,18 @@ public final class StepCaptureView extends VBox {
         Button captureButton = new Button(STEP_CAPTURE_BUTTON_LABEL);
         captureButton.setMaxWidth(Double.MAX_VALUE);
 
-        // TODO: User notification & form reset
-        captureButton.setOnAction(e -> controller.captureStep(titleTextField.getText(), descriptionField.getText()));
+        captureButton.setOnAction(e -> {
+            Try<String> result = captureController.captureStep(titleTextField.getText(), descriptionField.getText());
+
+            result.onSuccess(msg -> {
+                notificationController.notifyInfo(msg);
+                titleTextField.setText("");
+                descriptionField.setText("");
+            });
+
+            result.onFailure(t -> notificationController.notifyError("Capturing step failed", t));
+
+        });
 
         VBox.setVgrow(descriptionField, Priority.ALWAYS);
         VBox.setVgrow(captureButton, Priority.ALWAYS);

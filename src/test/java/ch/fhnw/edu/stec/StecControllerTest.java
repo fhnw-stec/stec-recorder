@@ -2,6 +2,7 @@ package ch.fhnw.edu.stec;
 
 import ch.fhnw.edu.stec.model.GigDir;
 import io.vavr.collection.List;
+import javafx.stage.Stage;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -19,13 +20,15 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(ExternalResourceSupport.class)
 class StecControllerTest {
 
+    private static final Stage POPUP_OWNER = null; // creating an actual Stage could fail on a headless CI server
+
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
 
     @Test
     void chooseDirectory() throws IOException {
         StecModel model = new StecModel();
-        StecController controller = new StecController(model);
+        StecController controller = new StecController(POPUP_OWNER, model);
 
         File initialDir = tmpFolder.newFolder("initial");
         model.gigDirProperty().set(new GigDir.UninitializedGigDir(initialDir));
@@ -51,7 +54,7 @@ class StecControllerTest {
         File gitignoreFile = new File(gigDir, StecController.GIT_IGNORE_FILE_NAME);
 
         StecModel model = new StecModel();
-        StecController controller = new StecController(model);
+        StecController controller = new StecController(POPUP_OWNER, model);
         controller.chooseDirectory(gigDir);
 
         assertTrue(model.gigDirProperty().get() instanceof GigDir.UninitializedGigDir);

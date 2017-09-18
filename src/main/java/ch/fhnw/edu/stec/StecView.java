@@ -27,8 +27,8 @@ final class StecView extends VBox {
         GigChooserView gigChooserView = new GigChooserView(model.gigDirProperty(), owner, controller);
 
         GigStatusView gigStatusView = new GigStatusView(model.gigDirProperty(), controller);
-        StepCaptureView stepCaptureView = new StepCaptureView(controller);
-        StepTableView stepTableView = new StepTableView(model.steps());
+        StepCaptureView stepCaptureView = new StepCaptureView(controller, controller);
+        StepTableView stepTableView = new StepTableView(model.getSteps());
 
         TitledPane gigPane = new TitledPane(GIG_SECTION_TITLE, new VBox(gigChooserView, gigStatusView));
         gigPane.setCollapsible(false);
