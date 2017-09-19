@@ -29,6 +29,21 @@ repositories {
 
 mainClassName = 'ch.fhnw.edu.stec.StecApp'
 
+jar {
+    doFirst {
+        manifest {
+            attributes(
+                    'Main-Class': mainClassName,
+                    'Application-Version': version,
+                    'Build-Time': new Date().format("EEE, dd MMM yyyy HH:mm:ss z")
+            )
+        }
+    }
+    from('.') {
+        include 'version.txt'
+    }
+}
+
 dependencies {
     compile libraries.vavr
     compile libraries.jgit

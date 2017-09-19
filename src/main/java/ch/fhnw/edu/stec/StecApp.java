@@ -7,6 +7,9 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
+import java.util.Scanner;
+
 public final class StecApp extends Application {
 
     private static final double WIDTH = 800;
@@ -14,6 +17,17 @@ public final class StecApp extends Application {
     private static final String TITLE = "STEC";
 
     private static final Logger LOG = LoggerFactory.getLogger(StecApp.class);
+
+    public static void main(String... args) {
+        Platform.setImplicitExit(true); // Exit VM if main frame is closed
+        try {
+            LOG.trace("Launching application");
+            launch(args);
+        } catch (Throwable t) {
+            LOG.error(t.getMessage(), t);
+            System.exit(-1);
+        }
+    }
 
     @Override
     public void start(Stage stage) {
@@ -23,7 +37,7 @@ public final class StecApp extends Application {
         StecView view = new StecView(model, stage.getOwner(), controller);
         Scene scene = new Scene(view);
 
-        stage.setTitle(TITLE);
+        stage.setTitle(TITLE + getVersionSuffix());
         stage.setScene(scene);
         stage.setWidth(WIDTH);
         stage.setHeight(HEIGHT);
@@ -37,15 +51,15 @@ public final class StecApp extends Application {
         stage.show();
     }
 
-    public static void main(String... args) {
-        Platform.setImplicitExit(true); // Exit VM if main frame is closed
+    private static String getVersionSuffix() {
         try {
-            LOG.trace("Launching application");
-            launch(args);
+            InputStream versionAsStream = StecApp.class.getResourceAsStream("/version.txt");
+            String version = new Scanner(versionAsStream).useDelimiter("\\A").next();
+            return " – " + version;
         } catch (Throwable t) {
-            LOG.error(t.getMessage(), t);
-            System.exit(-1);
+            // Expected to fail if not launched from JAR (e.g. inside IDE)
         }
+        return "";
     }
 
 }
