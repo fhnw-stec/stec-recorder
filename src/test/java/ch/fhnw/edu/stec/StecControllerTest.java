@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Set;
 
 import static ch.fhnw.edu.stec.StecController.README_FILE_NAME;
 import static org.junit.jupiter.api.Assertions.*;
@@ -115,7 +116,7 @@ class StecControllerTest {
         // assert that a tagged commit representing the step has been created
 
         Repository repository = Git.open(gigDir).getRepository();
-        assertTrue(repository.getTags().containsKey("step-42"));
+        assertTrue(repository.getTags().containsKey("step-1"));
 
         // assert that the model has been updated accordingly
 
@@ -133,6 +134,31 @@ class StecControllerTest {
         loader.copyTo(out);
         String treeContents = new String(out.toByteArray());
         assertTrue(treeContents.contains(newFile));
+    }
+
+    @Test
+    void captureStepAutoIncrementTag() throws IOException, GitAPIException {
+        File gigDir = tmpFolder.newFolder();
+        StecModel model = new StecModel();
+        StecController controller = createInitializedGig(gigDir, model);
+
+        assertTrue(controller.captureStep("Step 1", "Description of Step 1").isSuccess());
+        assertTrue(controller.captureStep("Step 2", "Description of Step 2").isSuccess());
+        assertTrue(controller.captureStep("Step 3", "Description of Step 3").isSuccess());
+
+        Git git = Git.open(gigDir);
+        Repository repository = git.getRepository();
+        Set<String> tags = repository.getTags().keySet();
+
+        assertTrue(tags.contains("step-1"));
+        assertTrue(tags.contains("step-2"));
+        assertTrue(tags.contains("step-3"));
+
+        // assert that auto-incrementing logic can cope with tags which were created behind the controller's back
+        git.tag().setName("step-42").setMessage("A manually set tag").call();
+
+        assertTrue(controller.captureStep("Step 4", "Description of Step 4").isSuccess());
+        assertTrue(repository.getTags().keySet().contains("step-43"));
     }
 
 }

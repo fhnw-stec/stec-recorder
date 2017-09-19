@@ -9,9 +9,7 @@ import ch.fhnw.edu.stec.notification.NotificationController;
 import ch.fhnw.edu.stec.notification.NotificationPopupDispatcher;
 import ch.fhnw.edu.stec.status.GigStatusController;
 import ch.fhnw.edu.stec.util.Labels;
-import io.vavr.collection.HashMap;
-import io.vavr.collection.Map;
-import io.vavr.collection.Seq;
+import io.vavr.collection.*;
 import io.vavr.control.Try;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -36,9 +34,12 @@ final class StecController implements GigChooserController, GigStatusController,
     static final String GIT_REPO = ".git";
     static final String GIT_IGNORE_FILE_NAME = ".gitignore";
     static final String ADD_GIT_IGNORE_COMMIT_MSG = "Add " + GIT_IGNORE_FILE_NAME;
+    static final String README_FILE_NAME = "README.adoc";
+
+    private static final String STEP_PREFIX = "step-";
     private static final Logger LOG = LoggerFactory.getLogger(StecController.class);
     private static final String GIT_IGNORE_TEMPLATE_FILE_NAME = "/gitignore-template.txt";
-    static final String README_FILE_NAME = "README.adoc";
+
     private final StecModel model;
 
     StecController(Stage popupOwner, StecModel model) {
@@ -70,6 +71,36 @@ final class StecController implements GigChooserController, GigStatusController,
 
         } catch (IOException | GitAPIException e) {
             LOG.error("Git commit .gitignore failed.", e);
+        }
+    }
+
+    private static String nextTag(Set<String> existingTags) {
+        // assuming a "step-42" format, find highest numerical suffix among existing tags
+        Integer maxIntSuffix = existingTags.map(t -> {
+            String suffix = t.substring(STEP_PREFIX.length());
+            if (suffix.chars().allMatch(Character::isDigit)) {
+                return Integer.parseInt(suffix);
+            } else {
+                return 0;
+            }
+        }).max().getOrElse(0);
+        return STEP_PREFIX + (maxIntSuffix + 1);
+    }
+
+    private static Seq<Step> loadSteps(Git git) {
+        Map<String, Ref> tags = HashMap.ofAll(git.getRepository().getTags());
+        RevWalk walk = new RevWalk(git.getRepository());
+        return tags.flatMap(tag -> loadStep(walk, tag._1, tag._2));
+    }
+
+    private static Try<Step> loadStep(RevWalk walk, String tagName, Ref tagRef) {
+        try {
+            RevTag revTag = walk.parseTag(tagRef.getObjectId());
+            Step step = new Step(tagName, revTag.getFullMessage());
+            return Try.success(step);
+        } catch (Throwable t) {
+            LOG.error("Loading step details failed", t);
+            return Try.failure(t);
         }
     }
 
@@ -125,8 +156,8 @@ final class StecController implements GigChooserController, GigStatusController,
 
             git.commit().setMessage(Labels.COMMIT_MSG).call();
 
-            // TODO: Auto-generation of next available tag
-            String tagName = "step-42";
+            Set<String> existingTags = HashSet.ofAll(git.getRepository().getTags().keySet());
+            String tagName = nextTag(existingTags);
             git.tag().setName(tagName).setMessage(title).call();
 
             model.getSteps().setAll(loadSteps(git).asJava());
@@ -135,23 +166,6 @@ final class StecController implements GigChooserController, GigStatusController,
         } catch (GitAPIException | IOException e) {
             LOG.error("Capturing step failed", e);
             return Try.failure(e);
-        }
-    }
-
-    private static Seq<Step> loadSteps(Git git) {
-        Map<String, Ref> tags = HashMap.ofAll(git.getRepository().getTags());
-        RevWalk walk = new RevWalk(git.getRepository());
-        return tags.flatMap(tag -> loadStep(walk, tag._1, tag._2));
-    }
-
-    private static Try<Step> loadStep(RevWalk walk, String tagName, Ref tagRef) {
-        try {
-            RevTag revTag = walk.parseTag(tagRef.getObjectId());
-            Step step = new Step(tagName, revTag.getFullMessage());
-            return Try.success(step);
-        } catch (Throwable t) {
-            LOG.error("Loading step details failed", t);
-            return Try.failure(t);
         }
     }
 
