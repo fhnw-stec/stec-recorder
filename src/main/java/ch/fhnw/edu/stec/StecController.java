@@ -38,7 +38,7 @@ final class StecController implements GigChooserController, GigStatusController,
     static final String ADD_GIT_IGNORE_COMMIT_MSG = "Add " + GIT_IGNORE_FILE_NAME;
     private static final Logger LOG = LoggerFactory.getLogger(StecController.class);
     private static final String GIT_IGNORE_TEMPLATE_FILE_NAME = "/gitignore-template.txt";
-    private static final String README_FILE_NAME = "README.adoc";
+    static final String README_FILE_NAME = "README.adoc";
     private final StecModel model;
 
     StecController(Stage popupOwner, StecModel model) {
