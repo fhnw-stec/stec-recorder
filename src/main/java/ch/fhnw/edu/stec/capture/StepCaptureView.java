@@ -2,6 +2,7 @@ package ch.fhnw.edu.stec.capture;
 
 import ch.fhnw.edu.stec.notification.NotificationController;
 import io.vavr.control.Try;
+import javafx.beans.binding.BooleanBinding;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
@@ -43,6 +44,9 @@ public final class StepCaptureView extends VBox {
             result.onFailure(t -> notificationController.notifyError("Capturing step failed", t));
 
         });
+
+        BooleanBinding isInputComplete = titleTextField.textProperty().isEmpty().or(descriptionField.textProperty().isEmpty());
+        captureButton.disableProperty().bind(isInputComplete);
 
         VBox.setVgrow(descriptionField, Priority.ALWAYS);
         VBox.setVgrow(captureButton, Priority.ALWAYS);
