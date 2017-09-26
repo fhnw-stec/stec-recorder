@@ -2,6 +2,7 @@ package ch.fhnw.edu.stec;
 
 import ch.fhnw.edu.stec.capture.StepCaptureView;
 import ch.fhnw.edu.stec.chooser.GigChooserView;
+import ch.fhnw.edu.stec.dot.DotView;
 import ch.fhnw.edu.stec.model.GigDir;
 import ch.fhnw.edu.stec.status.GigStatusView;
 import ch.fhnw.edu.stec.steps.StepTableView;
@@ -44,8 +45,12 @@ final class StecView extends VBox {
         BooleanBinding gigReady = Bindings.createBooleanBinding(() -> (model.gigDirProperty().get() instanceof GigDir.ReadyGigDir), model.gigDirProperty());
         tabPane.disableProperty().bind(gigReady.not());
 
+        DotView dotView = new DotView(model.getSteps());
+
         VBox.setVgrow(tabPane, Priority.ALWAYS);
-        getChildren().addAll(gigPane, tabPane);
+        VBox.setVgrow(dotView, Priority.ALWAYS);
+
+        getChildren().addAll(gigPane, tabPane, dotView);
 
     }
 
