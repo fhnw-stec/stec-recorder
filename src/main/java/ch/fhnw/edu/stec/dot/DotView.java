@@ -7,6 +7,8 @@ import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.NumberBinding;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.scene.Cursor;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -38,14 +40,24 @@ public final class DotView extends Region {
         NumberBinding dx = Bindings.min(DOT_DEFAULT_SPACING, maxDx);
 
         return List.ofAll(steps).zipWithIndex().map(t -> {
+            Step step = t._1;
             int stepIndex = t._2;
             NumberBinding x = dx.multiply(stepIndex).add(DOT_RADIUS).add(PADDING_X);
             Circle circle = new Circle(DOT_RADIUS, DOT_DEFAULT_FILL);
             circle.centerXProperty().bind(x);
             circle.centerYProperty().bind(y);
 
-            circle.setOnMouseEntered(e -> circle.setFill(DOT_HOVERED_FILL));
-            circle.setOnMouseExited(e -> circle.setFill(DOT_DEFAULT_FILL));
+            Tooltip tooltip = new Tooltip(step.getTitle());
+            Tooltip.install(circle, tooltip);
+
+            circle.setOnMouseEntered(e -> {
+                circle.setFill(DOT_HOVERED_FILL);
+                circle.setCursor(Cursor.HAND);
+            });
+            circle.setOnMouseExited(e -> {
+                circle.setFill(DOT_DEFAULT_FILL);
+                circle.setCursor(Cursor.DEFAULT);
+            });
 
             return circle;
         }).toJavaList();
