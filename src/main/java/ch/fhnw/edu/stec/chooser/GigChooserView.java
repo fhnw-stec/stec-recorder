@@ -3,7 +3,6 @@ package ch.fhnw.edu.stec.chooser;
 import ch.fhnw.edu.stec.model.GigDir;
 import ch.fhnw.edu.stec.util.Labels;
 import javafx.beans.property.ObjectProperty;
-import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -18,7 +17,6 @@ public final class GigChooserView extends HBox {
     public GigChooserView(ObjectProperty<GigDir> gigDirProperty, Window owner, GigChooserController controller) {
 
         setSpacing(5);
-        setPadding(new Insets(5));
 
         TextField rootDirectoryValueField = new TextField();
         rootDirectoryValueField.setEditable(true);

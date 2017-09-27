@@ -17,7 +17,7 @@ public final class StepCaptureView extends VBox {
     public StepCaptureView(StepCaptureController captureController, NotificationController notificationController) {
 
         setSpacing(5);
-        setPadding(new Insets(5, 0, 5, 5));
+        setPadding(new Insets(5));
 
         TextField titleTextField = new TextField();
         titleTextField.setEditable(true);
@@ -49,7 +49,6 @@ public final class StepCaptureView extends VBox {
         captureButton.disableProperty().bind(isInputComplete);
 
         VBox.setVgrow(descriptionField, Priority.ALWAYS);
-        VBox.setVgrow(captureButton, Priority.ALWAYS);
 
         getChildren().addAll(titleTextField, descriptionField, captureButton);
 

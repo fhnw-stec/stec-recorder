@@ -5,7 +5,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
-import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
@@ -21,8 +20,6 @@ public final class GigStatusView extends BorderPane {
     private static final String SYMBOL_X_MARK = "\u2717";
 
     public GigStatusView(ObjectProperty<GigDir> gigDirProperty, GigStatusController controller) {
-
-        setPadding(new Insets(5));
 
         Label label = new Label();
         label.textProperty().bind(dynamicLabel(gigDirProperty));

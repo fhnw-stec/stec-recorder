@@ -9,6 +9,8 @@ import ch.fhnw.edu.stec.steps.StepTableView;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TitledPane;
@@ -26,31 +28,38 @@ final class StecView extends VBox {
         setSpacing(5);
 
         GigChooserView gigChooserView = new GigChooserView(model.gigDirProperty(), owner, controller);
-
         GigStatusView gigStatusView = new GigStatusView(model.gigDirProperty(), controller);
-        StepCaptureView stepCaptureView = new StepCaptureView(controller, controller);
-        StepTableView stepTableView = new StepTableView(model.getSteps());
-
-        TitledPane gigPane = new TitledPane(GIG_SECTION_TITLE, new VBox(gigChooserView, gigStatusView));
+        VBox gigSectionContent = new VBox(5, gigChooserView, gigStatusView);
+        gigSectionContent.setPadding(new Insets(5));
+        TitledPane gigPane = new TitledPane(GIG_SECTION_TITLE, gigSectionContent);
         gigPane.setCollapsible(false);
 
-        Tab stepCaptureTab = new Tab(TAB_TITLE_CAPTURE_STEP, stepCaptureView);
-        stepCaptureTab.setClosable(false);
-
-        Tab stepTableTab = new Tab(TAB_TITLE_EXISTING_STEPS, stepTableView);
-        stepTableTab.setClosable(false);
-
-        TabPane tabPane = new TabPane(stepCaptureTab, stepTableTab);
-
-        BooleanBinding gigReady = Bindings.createBooleanBinding(() -> (model.gigDirProperty().get() instanceof GigDir.ReadyGigDir), model.gigDirProperty());
-        tabPane.disableProperty().bind(gigReady.not());
+        StepCaptureView stepCaptureView = new StepCaptureView(controller, controller);
+        stepCaptureView.setMinHeight(0);
+        TitledPane stepCapturePane = new TitledPane(STEP_CAPTURE_SECTION_TITLE, stepCaptureView);
+        stepCapturePane.setMaxHeight(Double.MAX_VALUE);
+        stepCapturePane.setCollapsible(false);
 
         DotView dotView = new DotView(model.getSteps());
+        Tab dotViewTab = new Tab(DOT_VIEW_TAB_TITLE, dotView);
+        dotViewTab.setClosable(false);
 
-        VBox.setVgrow(tabPane, Priority.ALWAYS);
-        VBox.setVgrow(dotView, Priority.ALWAYS);
+        StepTableView stepTableView = new StepTableView(model.getSteps());
+        Tab stepTableTab = new Tab(STEP_TABLE_TAB_TITLE, stepTableView);
+        stepTableTab.setClosable(false);
 
-        getChildren().addAll(gigPane, tabPane, dotView);
+        TabPane tabPane = new TabPane(dotViewTab, stepTableTab);
+        TitledPane existingStepsPane = new TitledPane(EXISTING_STEPS_SECTION_TITLE, tabPane);
+        existingStepsPane.setMaxHeight(Double.MAX_VALUE);
+        existingStepsPane.setCollapsible(false);
+
+        SplitPane stepsSplitPane = new SplitPane(stepCapturePane, existingStepsPane);
+        stepsSplitPane.setOrientation(Orientation.VERTICAL);
+        BooleanBinding gigReady = Bindings.createBooleanBinding(() -> (model.gigDirProperty().get() instanceof GigDir.ReadyGigDir), model.gigDirProperty());
+        stepsSplitPane.disableProperty().bind(gigReady.not());
+
+        VBox.setVgrow(stepsSplitPane, Priority.ALWAYS);
+        getChildren().addAll(gigPane, stepsSplitPane);
 
     }
 
