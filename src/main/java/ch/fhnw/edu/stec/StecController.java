@@ -48,6 +48,18 @@ final class StecController implements GigChooserController, GigStatusController,
         initModel();
 
         model.getNotifications().addListener(new NotificationPopupDispatcher(popupOwner));
+        model.gigDirProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue instanceof GigDir.ReadyGigDir) {
+                try {
+                    Git git = Git.open(model.gigDirProperty().get().getDir());
+                    model.getSteps().setAll(loadSteps(git).asJava());
+                } catch (IOException e) {
+                    LOG.error("Loading existing getSteps failed", e);
+                }
+            } else {
+                model.getSteps().clear();
+            }
+        });
     }
 
     private static Try<Git> initGitRepo(File dir) {
@@ -119,12 +131,6 @@ final class StecController implements GigChooserController, GigStatusController,
             boolean isInitialized = RepositoryCache.FileKey.isGitRepository(gitRepo, FS.detect());
             if (isInitialized) {
                 model.gigDirProperty().setValue(new GigDir.ReadyGigDir(dir));
-                try {
-                    Git git = Git.open(model.gigDirProperty().get().getDir());
-                    model.getSteps().setAll(loadSteps(git).asJava());
-                } catch (IOException e) {
-                    LOG.error("Loading existing getSteps failed", e);
-                }
             } else {
                 model.gigDirProperty().setValue(new GigDir.UninitializedGigDir(dir));
             }

@@ -56,15 +56,23 @@ class StecControllerTest {
         assertTrue(model.gigDirProperty().get() instanceof GigDir.InvalidGigDir, "null safety");
         assertEquals(new File(""), model.gigDirProperty().get().getDir(), "null safety");
 
-        File file = tmpFolder.newFile();
-        controller.chooseDirectory(file);
+        File invalidDir = tmpFolder.newFile();
+        controller.chooseDirectory(invalidDir);
         assertTrue(model.gigDirProperty().get() instanceof GigDir.InvalidGigDir, "not a directory");
-        assertEquals(file, model.gigDirProperty().get().getDir(), "null safety");
+        assertEquals(invalidDir, model.gigDirProperty().get().getDir(), "null safety");
 
         File newDir = tmpFolder.newFolder("new");
         controller.chooseDirectory(newDir);
         assertTrue(model.gigDirProperty().get() instanceof GigDir.UninitializedGigDir);
         assertEquals(newDir, model.gigDirProperty().get().getDir());
+
+        controller.initGig();
+        assertTrue(model.gigDirProperty().get() instanceof GigDir.ReadyGigDir);
+        controller.captureStep("test-step", "test description");
+        assertEquals(1, model.getSteps().size());
+
+        controller.chooseDirectory(invalidDir);
+        assertEquals(0, model.getSteps().size());
     }
 
     @Test
