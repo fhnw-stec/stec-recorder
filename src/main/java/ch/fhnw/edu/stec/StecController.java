@@ -1,13 +1,12 @@
 package ch.fhnw.edu.stec;
 
 import ch.fhnw.edu.stec.capture.StepCaptureController;
-import ch.fhnw.edu.stec.chooser.GigChooserController;
+import ch.fhnw.edu.stec.gig.GigController;
 import ch.fhnw.edu.stec.model.GigDir;
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.notification.Notification;
 import ch.fhnw.edu.stec.notification.NotificationController;
 import ch.fhnw.edu.stec.notification.NotificationPopupDispatcher;
-import ch.fhnw.edu.stec.status.GigStatusController;
 import ch.fhnw.edu.stec.util.Labels;
 import io.vavr.collection.*;
 import io.vavr.control.Try;
@@ -29,7 +28,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
-final class StecController implements GigChooserController, GigStatusController, StepCaptureController, NotificationController {
+final class StecController implements GigController, StepCaptureController, NotificationController {
 
     static final String GIT_REPO = ".git";
     static final String GIT_IGNORE_FILE_NAME = ".gitignore";
@@ -48,18 +47,21 @@ final class StecController implements GigChooserController, GigStatusController,
         initModel();
 
         model.getNotifications().addListener(new NotificationPopupDispatcher(popupOwner));
-        model.gigDirProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue instanceof GigDir.ReadyGigDir) {
-                try {
-                    Git git = Git.open(model.gigDirProperty().get().getDir());
-                    model.getSteps().setAll(loadSteps(git).asJava());
-                } catch (IOException e) {
-                    LOG.error("Loading existing getSteps failed", e);
-                }
-            } else {
-                model.getSteps().clear();
+        model.gigDirProperty().addListener((observable, oldValue, newValue) -> refresh());
+    }
+
+    public void refresh() {
+        GigDir gigDir = model.gigDirProperty().get();
+        if (gigDir instanceof GigDir.ReadyGigDir) {
+            try {
+                Git git = Git.open(gigDir.getDir());
+                model.getSteps().setAll(loadSteps(git).asJava());
+            } catch (IOException e) {
+                LOG.error("Loading existing getSteps failed", e);
             }
-        });
+        } else {
+            model.getSteps().clear();
+        }
     }
 
     private static Try<Git> initGitRepo(File dir) {

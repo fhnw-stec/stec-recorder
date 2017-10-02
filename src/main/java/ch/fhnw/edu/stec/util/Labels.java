@@ -22,4 +22,5 @@ public interface Labels {
 
     String COMMIT_MSG = "Captured with https://github.com/fhnw-stec/stec-recorder";
 
+    String REFRESH = "Refresh";
 }

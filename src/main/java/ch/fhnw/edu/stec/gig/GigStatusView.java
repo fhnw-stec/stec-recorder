@@ -1,4 +1,4 @@
-package ch.fhnw.edu.stec.status;
+package ch.fhnw.edu.stec.gig;
 
 import ch.fhnw.edu.stec.model.GigDir;
 import javafx.beans.binding.Bindings;
@@ -19,7 +19,7 @@ public final class GigStatusView extends BorderPane {
     private static final String SYMBOL_CHECK_MARK = "\u2713";
     private static final String SYMBOL_X_MARK = "\u2717";
 
-    public GigStatusView(ObjectProperty<GigDir> gigDirProperty, GigStatusController controller) {
+    public GigStatusView(ObjectProperty<GigDir> gigDirProperty, GigController controller) {
 
         Label label = new Label();
         label.textProperty().bind(dynamicLabel(gigDirProperty));

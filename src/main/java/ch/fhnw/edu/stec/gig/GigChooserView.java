@@ -1,4 +1,4 @@
-package ch.fhnw.edu.stec.chooser;
+package ch.fhnw.edu.stec.gig;
 
 import ch.fhnw.edu.stec.model.GigDir;
 import ch.fhnw.edu.stec.util.Labels;
@@ -14,7 +14,7 @@ import java.io.File;
 
 public final class GigChooserView extends HBox {
 
-    public GigChooserView(ObjectProperty<GigDir> gigDirProperty, Window owner, GigChooserController controller) {
+    public GigChooserView(ObjectProperty<GigDir> gigDirProperty, Window owner, GigController controller) {
 
         setSpacing(5);
 
