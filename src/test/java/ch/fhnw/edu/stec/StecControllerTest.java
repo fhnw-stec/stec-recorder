@@ -4,6 +4,7 @@ import ch.fhnw.edu.stec.model.GigDir;
 import ch.fhnw.edu.stec.model.Step;
 import io.vavr.collection.List;
 import io.vavr.control.Try;
+import javafx.collections.ObservableList;
 import javafx.stage.Stage;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -167,6 +168,32 @@ class StecControllerTest {
 
         assertTrue(controller.captureStep("Step 4", "Description of Step 4").isSuccess());
         assertTrue(repository.getTags().keySet().contains("step-43"));
+    }
+
+    @Test
+    void loadSteps() throws IOException {
+        File gigDir = tmpFolder.newFolder();
+        StecModel model = new StecModel();
+        StecController controller = createInitializedGig(gigDir, model);
+
+        assertTrue(controller.captureStep("Step 1", "Description of Step 1").isSuccess());
+        assertTrue(controller.captureStep("Step 2", "Description of Step 2").isSuccess());
+        assertTrue(controller.captureStep("Step 3", "Description of Step 3").isSuccess());
+
+        ObservableList<Step> steps = model.getSteps();
+        assertEquals(3, steps.size());
+
+        Step firstStep = steps.get(0);
+        assertEquals("Step 1", firstStep.getTitle());
+        assertFalse(firstStep.isHead());
+
+        Step secondStep = steps.get(1);
+        assertEquals("Step 2", secondStep.getTitle());
+        assertFalse(secondStep.isHead());
+
+        Step thirdStep = steps.get(2);
+        assertEquals("Step 3", thirdStep.getTitle());
+        assertTrue(thirdStep.isHead());
     }
 
 }

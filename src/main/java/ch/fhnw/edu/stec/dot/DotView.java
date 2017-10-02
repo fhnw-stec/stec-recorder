@@ -47,6 +47,10 @@ public final class DotView extends Region {
             circle.centerXProperty().bind(x);
             circle.centerYProperty().bind(y);
 
+            if (step.isHead()) {
+                circle.setStroke(Color.BLACK);
+            }
+
             Tooltip tooltip = new Tooltip(step.getTitle());
             Tooltip.install(circle, tooltip);
 

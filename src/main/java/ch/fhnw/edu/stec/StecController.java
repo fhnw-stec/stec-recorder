@@ -15,8 +15,8 @@ import javafx.application.Platform;
 import javafx.stage.Stage;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.lib.RepositoryCache;
+import org.eclipse.jgit.lib.*;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTag;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.util.FS;
@@ -99,16 +99,21 @@ final class StecController implements GigChooserController, GigStatusController,
         return STEP_PREFIX + (maxIntSuffix + 1);
     }
 
-    private static Seq<Step> loadSteps(Git git) {
-        Map<String, Ref> tags = HashMap.ofAll(git.getRepository().getTags());
-        RevWalk walk = new RevWalk(git.getRepository());
-        return tags.flatMap(tag -> loadStep(walk, tag._1, tag._2));
+    private static Seq<Step> loadSteps(Git git) throws IOException {
+        Repository repository = git.getRepository();
+        Map<String, Ref> tags = HashMap.ofAll(repository.getTags());
+        RevWalk walk = new RevWalk(repository);
+        ObjectId headId = repository.resolve(Constants.HEAD);
+        return tags.flatMap(tag -> loadStep(walk, tag._1, tag._2, headId));
     }
 
-    private static Try<Step> loadStep(RevWalk walk, String tagName, Ref tagRef) {
+    private static Try<Step> loadStep(RevWalk walk, String tagName, Ref tagRef, ObjectId headId) {
         try {
-            RevTag revTag = walk.parseTag(tagRef.getObjectId());
-            Step step = new Step(tagName, revTag.getFullMessage());
+            ObjectId tagId = tagRef.getObjectId();
+            RevCommit revCommit = walk.parseCommit(tagId);
+            RevTag revTag = walk.parseTag(tagId);
+            boolean isHead = revCommit.getId().equals(headId);
+            Step step = new Step(tagName, revTag.getFullMessage(), isHead);
             return Try.success(step);
         } catch (Throwable t) {
             LOG.error("Loading step details failed", t);
