@@ -67,7 +67,7 @@ public final class StepCaptureView extends VBox {
 
         // Creating the renderer is expensive -> must happen outside of listener
         AsciidoctorRenderer renderer = new AsciidoctorRenderer();
-        descriptionField.setOnKeyReleased(e -> {
+        descriptionField.textProperty().addListener(cl -> {
             String html = renderer.renderToHtml(descriptionField.getText());
             preview.getEngine().loadContent(html);
         });
