@@ -1,14 +1,20 @@
 package ch.fhnw.edu.stec.capture;
 
 import ch.fhnw.edu.stec.notification.NotificationController;
+import ch.fhnw.edu.stec.util.AsciidoctorRenderer;
+import ch.fhnw.edu.stec.util.Labels;
 import io.vavr.control.Try;
 import javafx.beans.binding.BooleanBinding;
 import javafx.geometry.Insets;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.web.WebView;
 
 import static ch.fhnw.edu.stec.util.Labels.*;
 
@@ -29,6 +35,8 @@ public final class StepCaptureView extends VBox {
         descriptionField.setPrefRowCount(3);
         descriptionField.setPromptText(STEP_DESCRIPTION_PROMPT);
 
+        SplitPane editor = createDescriptionEditor(descriptionField);
+
         Button captureButton = new Button(STEP_CAPTURE_BUTTON_LABEL);
         captureButton.setMaxWidth(Double.MAX_VALUE);
 
@@ -48,10 +56,31 @@ public final class StepCaptureView extends VBox {
         BooleanBinding isInputComplete = titleTextField.textProperty().isEmpty().or(descriptionField.textProperty().isEmpty());
         captureButton.disableProperty().bind(isInputComplete);
 
-        VBox.setVgrow(descriptionField, Priority.ALWAYS);
+        VBox.setVgrow(editor, Priority.ALWAYS);
 
-        getChildren().addAll(titleTextField, descriptionField, captureButton);
+        getChildren().addAll(titleTextField, editor, captureButton);
 
+    }
+
+    private static SplitPane createDescriptionEditor(TextArea descriptionField) {
+        WebView preview = new WebView();
+
+        // Creating the renderer is expensive -> must happen outside of listener
+        AsciidoctorRenderer renderer = new AsciidoctorRenderer();
+        descriptionField.setOnKeyReleased(e -> {
+            String html = renderer.renderToHtml(descriptionField.getText());
+            preview.getEngine().loadContent(html);
+        });
+
+        Label previewOverlayLabel = new Label(Labels.PREVIEW);
+        previewOverlayLabel.setTextFill(Color.LIGHTGRAY);
+        HBox previewOverlay = new HBox(previewOverlayLabel);
+        previewOverlay.setPadding(new Insets(5));
+        previewOverlay.setAlignment(Pos.BOTTOM_RIGHT);
+
+        SplitPane editor = new SplitPane(descriptionField, new StackPane(preview, previewOverlay));
+        editor.setOrientation(Orientation.HORIZONTAL);
+        return editor;
     }
 
 }

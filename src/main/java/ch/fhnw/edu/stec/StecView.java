@@ -43,16 +43,23 @@ final class StecView extends VBox {
 
     }
 
-    private static SplitPane createStepsPane(StecModel model, StecController controller) {
-        TitledPane stepCapturePane = createStepCapturePane(controller);
-        Pane existingStepsPane = createExistingStepsPane(model, controller);
+    private static TitledPane createGitPane(StecModel model, Window owner, StecController controller) {
+        GigChooserView gigChooserView = new GigChooserView(model.gigDirProperty(), owner, controller);
+        GigStatusView gigStatusView = new GigStatusView(model.gigDirProperty(), controller);
+        VBox gigSectionContent = new VBox(5, gigChooserView, gigStatusView);
+        gigSectionContent.setPadding(new Insets(5));
+        TitledPane gigPane = new TitledPane(GIG_SECTION_TITLE, gigSectionContent);
+        gigPane.setCollapsible(false);
+        return gigPane;
+    }
 
-        SplitPane stepsSplitPane = new SplitPane(stepCapturePane, existingStepsPane);
-        stepsSplitPane.setOrientation(Orientation.VERTICAL);
-        BooleanBinding gigReady = Bindings.createBooleanBinding(() -> (model.gigDirProperty().get() instanceof GigDir.ReadyGigDir), model.gigDirProperty());
-        stepsSplitPane.disableProperty().bind(gigReady.not());
-
-        return stepsSplitPane;
+    private static TitledPane createStepCapturePane(StecController controller) {
+        StepCaptureView stepCaptureView = new StepCaptureView(controller, controller);
+        stepCaptureView.setMinHeight(0);
+        TitledPane stepCapturePane = new TitledPane(STEP_CAPTURE_SECTION_TITLE, stepCaptureView);
+        stepCapturePane.setMaxHeight(Double.MAX_VALUE);
+        stepCapturePane.setCollapsible(false);
+        return stepCapturePane;
     }
 
     private static VBox createExistingStepsPane(StecModel model, StecController controller) {
@@ -91,23 +98,16 @@ final class StecView extends VBox {
         return pane;
     }
 
-    private static TitledPane createStepCapturePane(StecController controller) {
-        StepCaptureView stepCaptureView = new StepCaptureView(controller, controller);
-        stepCaptureView.setMinHeight(0);
-        TitledPane stepCapturePane = new TitledPane(STEP_CAPTURE_SECTION_TITLE, stepCaptureView);
-        stepCapturePane.setMaxHeight(Double.MAX_VALUE);
-        stepCapturePane.setCollapsible(false);
-        return stepCapturePane;
-    }
+    private static SplitPane createStepsPane(StecModel model, StecController controller) {
+        TitledPane stepCapturePane = createStepCapturePane(controller);
+        Pane existingStepsPane = createExistingStepsPane(model, controller);
 
-    private static TitledPane createGitPane(StecModel model, Window owner, StecController controller) {
-        GigChooserView gigChooserView = new GigChooserView(model.gigDirProperty(), owner, controller);
-        GigStatusView gigStatusView = new GigStatusView(model.gigDirProperty(), controller);
-        VBox gigSectionContent = new VBox(5, gigChooserView, gigStatusView);
-        gigSectionContent.setPadding(new Insets(5));
-        TitledPane gigPane = new TitledPane(GIG_SECTION_TITLE, gigSectionContent);
-        gigPane.setCollapsible(false);
-        return gigPane;
-    }
+        SplitPane stepsSplitPane = new SplitPane(stepCapturePane, existingStepsPane);
+        stepsSplitPane.setOrientation(Orientation.VERTICAL);
+        BooleanBinding gigReady = Bindings.createBooleanBinding(() -> (model.gigDirProperty().get() instanceof GigDir.ReadyGigDir), model.gigDirProperty());
+        stepsSplitPane.disableProperty().bind(gigReady.not());
+        stepsSplitPane.setDividerPositions(0.8);
 
+        return stepsSplitPane;
+    }
 }

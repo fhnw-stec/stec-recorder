@@ -48,6 +48,7 @@ dependencies {
     compile libraries.vavr
     compile libraries.jgit
     compile libraries.controlsfx
+    compile libraries.asciidoctorj
     compile libraries.slf4j
     compile libraries.log4j
 

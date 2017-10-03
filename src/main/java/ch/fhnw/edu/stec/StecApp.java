@@ -12,8 +12,8 @@ import java.util.Scanner;
 
 public final class StecApp extends Application {
 
-    private static final double WIDTH = 800;
-    private static final double HEIGHT = 600;
+    private static final double WIDTH = 1000;
+    private static final double HEIGHT = 800;
     private static final String TITLE = "STEC";
 
     private static final Logger LOG = LoggerFactory.getLogger(StecApp.class);

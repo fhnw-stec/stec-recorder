@@ -17,8 +17,9 @@ public interface Labels {
     String READY_GIG_DIR_LABEL = "Gig directory ready";
 
     String STEP_TITLE_PROMPT = "Step Title";
-    String STEP_DESCRIPTION_PROMPT = "Step Description";
+    String STEP_DESCRIPTION_PROMPT = "Step Description (AsciiDoc)";
     String STEP_CAPTURE_BUTTON_LABEL = "Capture";
+    String PREVIEW = "Preview";
 
     String COMMIT_MSG = "Captured with https://github.com/fhnw-stec/stec-recorder";
 
