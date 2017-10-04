@@ -2,9 +2,7 @@ package ch.fhnw.edu.stec.history;
 
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.notification.NotificationController;
-import ch.fhnw.edu.stec.util.Labels;
 import io.vavr.collection.List;
-import io.vavr.control.Try;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.NumberBinding;
@@ -12,7 +10,6 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Cursor;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
@@ -68,15 +65,7 @@ public final class StepHistoryDotView extends Region {
                 circle.setCursor(Cursor.DEFAULT);
             });
 
-            ContextMenu contextMenu = new ContextMenu();
-            MenuItem checkoutItem = new MenuItem("Checkout");
-            checkoutItem.setOnAction(e -> {
-                Try<String> result = historyController.checkoutStep(step.getTag());
-                result.onSuccess(notificationController::notifyInfo);
-                result.onFailure(error -> notificationController.notifyError(Labels.CHECKOUT_FAILED, error));
-            });
-            contextMenu.getItems().add(checkoutItem);
-
+            ContextMenu contextMenu = new StepHistoryContextMenu(() -> step, historyController, notificationController);
             circle.setOnContextMenuRequested(e -> contextMenu.show(circle, e.getScreenX(), e.getScreenY()));
 
             return circle;

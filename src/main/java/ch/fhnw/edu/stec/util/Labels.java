@@ -23,10 +23,12 @@ public interface Labels {
 
     String COMMIT_MSG = "Captured with https://github.com/fhnw-stec/stec-recorder";
 
-    String REFRESH = "Refresh";
+    String REFRESH_BUTTON_TOOLTIP = "Refresh";
     String CAPTURE_SUCCESSFUL = "Capture successful";
     String CAPTURE_FAILED = "Capture failed";
     String CHECKOUT_SUCCESSFUL = "Checkout successful";
     String CHECKOUT_FAILED = "Checkout failed";
+
+    String CHECKOUT_CONTEXT_MENU_ITEM = "Checkout";
 
 }

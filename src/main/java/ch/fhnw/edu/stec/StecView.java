@@ -67,7 +67,7 @@ final class StecView extends VBox {
         Tab dotViewTab = new Tab(DOT_VIEW_TAB_TITLE, stepHistoryDotView);
         dotViewTab.setClosable(false);
 
-        StepHistoryTableView stepHistoryTableView = new StepHistoryTableView(model.getSteps());
+        StepHistoryTableView stepHistoryTableView = new StepHistoryTableView(model.getSteps(), controller, controller);
         Tab stepTableTab = new Tab(STEP_TABLE_TAB_TITLE, stepHistoryTableView);
         stepTableTab.setClosable(false);
 
@@ -79,7 +79,7 @@ final class StecView extends VBox {
 
         GlyphFont fontAwesome = GlyphFontRegistry.font("FontAwesome");
         Button refreshButton = new Button("", fontAwesome.create(FontAwesome.Glyph.REFRESH));
-        refreshButton.setTooltip(new Tooltip(Labels.REFRESH));
+        refreshButton.setTooltip(new Tooltip(Labels.REFRESH_BUTTON_TOOLTIP));
         refreshButton.setOnAction(e -> controller.refresh());
 
         // tweak button appearance to be more lightweight, only showing border if hovered
