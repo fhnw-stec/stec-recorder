@@ -4,7 +4,7 @@ public interface Labels {
 
     String GIG_SECTION_TITLE = "Gig Directory";
     String STEP_CAPTURE_SECTION_TITLE = "Capture Step";
-    String EXISTING_STEPS_SECTION_TITLE = "Existing Steps";
+    String STEP_HISTORY_SECTION_TITLE = "Step History";
 
     String DOT_VIEW_TAB_TITLE = "Visual";
     String STEP_TABLE_TAB_TITLE = "Tabular";
@@ -24,4 +24,9 @@ public interface Labels {
     String COMMIT_MSG = "Captured with https://github.com/fhnw-stec/stec-recorder";
 
     String REFRESH = "Refresh";
+    String CAPTURE_SUCCESSFUL = "Capture successful";
+    String CAPTURE_FAILED = "Capture failed";
+    String CHECKOUT_SUCCESSFUL = "Checkout successful";
+    String CHECKOUT_FAILED = "Checkout failed";
+
 }

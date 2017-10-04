@@ -49,7 +49,7 @@ public final class StepCaptureView extends VBox {
                 descriptionField.setText("");
             });
 
-            result.onFailure(t -> notificationController.notifyError("Capturing step failed", t));
+            result.onFailure(t -> notificationController.notifyError(Labels.CAPTURE_FAILED, t));
 
         });
 

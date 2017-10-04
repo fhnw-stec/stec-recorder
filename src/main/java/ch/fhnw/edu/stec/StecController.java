@@ -7,6 +7,7 @@ import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.notification.Notification;
 import ch.fhnw.edu.stec.notification.NotificationController;
 import ch.fhnw.edu.stec.notification.NotificationPopupDispatcher;
+import ch.fhnw.edu.stec.history.StepHistoryController;
 import ch.fhnw.edu.stec.util.Labels;
 import io.vavr.collection.*;
 import io.vavr.control.Try;
@@ -28,7 +29,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
-final class StecController implements GigController, StepCaptureController, NotificationController {
+final class StecController implements GigController, StepCaptureController, StepHistoryController, NotificationController {
 
     static final String GIT_REPO = ".git";
     static final String GIT_IGNORE_FILE_NAME = ".gitignore";
@@ -48,20 +49,6 @@ final class StecController implements GigController, StepCaptureController, Noti
 
         model.getNotifications().addListener(new NotificationPopupDispatcher(popupOwner));
         model.gigDirProperty().addListener((observable, oldValue, newValue) -> refresh());
-    }
-
-    public void refresh() {
-        GigDir gigDir = model.gigDirProperty().get();
-        if (gigDir instanceof GigDir.ReadyGigDir) {
-            try {
-                Git git = Git.open(gigDir.getDir());
-                model.getSteps().setAll(loadSteps(git).asJava());
-            } catch (IOException e) {
-                LOG.error("Loading existing getSteps failed", e);
-            }
-        } else {
-            model.getSteps().clear();
-        }
     }
 
     private static Try<Git> initGitRepo(File dir) {
@@ -123,6 +110,20 @@ final class StecController implements GigController, StepCaptureController, Noti
         }
     }
 
+    public void refresh() {
+        GigDir gigDir = model.gigDirProperty().get();
+        if (gigDir instanceof GigDir.ReadyGigDir) {
+            try {
+                Git git = Git.open(gigDir.getDir());
+                model.getSteps().setAll(loadSteps(git).asJava());
+            } catch (IOException e) {
+                LOG.error("Loading existing steps failed", e);
+            }
+        } else {
+            model.getSteps().clear();
+        }
+    }
+
     private void initModel() {
         chooseDirectory(new File(System.getProperty("user.home")));
     }
@@ -173,12 +174,30 @@ final class StecController implements GigController, StepCaptureController, Noti
             String tagName = nextTag(existingTags);
             git.tag().setName(tagName).setMessage(title).call();
 
-            model.getSteps().setAll(loadSteps(git).asJava());
+            refresh();
 
-            return Try.success("Capturing step successful");
+            return Try.success(Labels.CAPTURE_SUCCESSFUL);
         } catch (GitAPIException | IOException e) {
-            LOG.error("Capturing step failed", e);
             return Try.failure(e);
+        }
+    }
+
+    @Override
+    public Try<String> checkoutStep(String tag) {
+        try {
+            File dir = model.gigDirProperty().get().getDir();
+            Git git = Git.open(dir);
+
+            git.checkout()
+                    .setName(tag)
+                    .setStartPoint(tag)
+                    .call();
+
+            refresh();
+
+            return Try.success(Labels.CHECKOUT_SUCCESSFUL);
+        } catch (Throwable t) {
+            return Try.failure(t);
         }
     }
 

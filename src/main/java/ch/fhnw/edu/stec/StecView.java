@@ -1,11 +1,11 @@
 package ch.fhnw.edu.stec;
 
 import ch.fhnw.edu.stec.capture.StepCaptureView;
-import ch.fhnw.edu.stec.dot.DotView;
+import ch.fhnw.edu.stec.history.StepHistoryDotView;
 import ch.fhnw.edu.stec.gig.GigChooserView;
 import ch.fhnw.edu.stec.gig.GigStatusView;
 import ch.fhnw.edu.stec.model.GigDir;
-import ch.fhnw.edu.stec.steps.StepTableView;
+import ch.fhnw.edu.stec.history.StepHistoryTableView;
 import ch.fhnw.edu.stec.util.Labels;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -62,20 +62,20 @@ final class StecView extends VBox {
         return stepCapturePane;
     }
 
-    private static VBox createExistingStepsPane(StecModel model, StecController controller) {
-        DotView dotView = new DotView(model.getSteps());
-        Tab dotViewTab = new Tab(DOT_VIEW_TAB_TITLE, dotView);
+    private static VBox createStepHistoryPane(StecModel model, StecController controller) {
+        StepHistoryDotView stepHistoryDotView = new StepHistoryDotView(model.getSteps(), controller, controller);
+        Tab dotViewTab = new Tab(DOT_VIEW_TAB_TITLE, stepHistoryDotView);
         dotViewTab.setClosable(false);
 
-        StepTableView stepTableView = new StepTableView(model.getSteps());
-        Tab stepTableTab = new Tab(STEP_TABLE_TAB_TITLE, stepTableView);
+        StepHistoryTableView stepHistoryTableView = new StepHistoryTableView(model.getSteps());
+        Tab stepTableTab = new Tab(STEP_TABLE_TAB_TITLE, stepHistoryTableView);
         stepTableTab.setClosable(false);
 
         TabPane tabPane = new TabPane(dotViewTab, stepTableTab);
 
-        TitledPane existingStepsPane = new TitledPane(EXISTING_STEPS_SECTION_TITLE, tabPane);
-        existingStepsPane.setMaxHeight(Double.MAX_VALUE);
-        existingStepsPane.setCollapsible(false);
+        TitledPane stepHistoryPane = new TitledPane(STEP_HISTORY_SECTION_TITLE, tabPane);
+        stepHistoryPane.setMaxHeight(Double.MAX_VALUE);
+        stepHistoryPane.setCollapsible(false);
 
         GlyphFont fontAwesome = GlyphFontRegistry.font("FontAwesome");
         Button refreshButton = new Button("", fontAwesome.create(FontAwesome.Glyph.REFRESH));
@@ -91,8 +91,8 @@ final class StecView extends VBox {
         refreshButtonPane.setPadding(new Insets(5));
         refreshButtonPane.setAlignment(Pos.CENTER_RIGHT);
 
-        VBox pane = new VBox(existingStepsPane, refreshButtonPane);
-        VBox.setVgrow(existingStepsPane, Priority.ALWAYS);
+        VBox pane = new VBox(stepHistoryPane, refreshButtonPane);
+        VBox.setVgrow(stepHistoryPane, Priority.ALWAYS);
         VBox.setVgrow(refreshButtonPane, Priority.NEVER);
 
         return pane;
@@ -100,9 +100,9 @@ final class StecView extends VBox {
 
     private static SplitPane createStepsPane(StecModel model, StecController controller) {
         TitledPane stepCapturePane = createStepCapturePane(controller);
-        Pane existingStepsPane = createExistingStepsPane(model, controller);
+        Pane stepHistoryPane = createStepHistoryPane(model, controller);
 
-        SplitPane stepsSplitPane = new SplitPane(stepCapturePane, existingStepsPane);
+        SplitPane stepsSplitPane = new SplitPane(stepCapturePane, stepHistoryPane);
         stepsSplitPane.setOrientation(Orientation.VERTICAL);
         BooleanBinding gigReady = Bindings.createBooleanBinding(() -> (model.gigDirProperty().get() instanceof GigDir.ReadyGigDir), model.gigDirProperty());
         stepsSplitPane.disableProperty().bind(gigReady.not());

@@ -196,4 +196,23 @@ class StecControllerTest {
         assertTrue(thirdStep.isHead());
     }
 
+    @Test
+    void checkoutStep() throws IOException {
+        File gigDir = tmpFolder.newFolder();
+        StecModel model = new StecModel();
+        StecController controller = createInitializedGig(gigDir, model);
+
+        assertTrue(controller.captureStep("Step 1", "Description of Step 1").isSuccess());
+        assertTrue(controller.captureStep("Step 2", "Description of Step 2").isSuccess());
+        assertTrue(controller.captureStep("Step 3", "Description of Step 3").isSuccess());
+
+        assertTrue(model.getSteps().get(2).isHead());
+
+        Try<String> result = controller.checkoutStep(model.getSteps().get(0).getTag());
+        assertTrue(result.isSuccess());
+
+        assertFalse(model.getSteps().get(2).isHead());
+        assertTrue(model.getSteps().get(0).isHead());
+    }
+
 }
