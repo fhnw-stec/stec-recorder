@@ -4,10 +4,10 @@ import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.notification.NotificationController;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.util.Callback;
 
 public final class StepHistoryTableView extends TableView<Step> {
 
@@ -17,11 +17,31 @@ public final class StepHistoryTableView extends TableView<Step> {
     public StepHistoryTableView(ObservableList<Step> steps, StepHistoryController historyController, NotificationController notificationController) {
         super(steps);
 
+        Callback<TableColumn<Step, String>, TableCell<Step, String>> cellFactory = (TableColumn<Step, String> column) -> new TableCell<Step, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (!empty) {
+                    Step step = (Step) getTableRow().getItem();
+                    Label label = new Label(item);
+                    if (step != null && step.isHead()) {
+                        // No bold with default font on macOS Sierra (https://bugs.openjdk.java.net/browse/JDK-8176835)
+                        label.setFont(Font.font("Helvetica", FontWeight.BOLD, 13));
+                    } else {
+                        label.setFont(Font.font("Helvetica", FontWeight.NORMAL, 13));
+                    }
+                    setGraphic(label);
+                }
+            }
+        };
+
         TableColumn<Step, String> tagColumn = new TableColumn<>(COLUMN_NAME_TAG);
         tagColumn.setCellValueFactory(step -> new SimpleStringProperty(step.getValue().getTag()));
+        tagColumn.setCellFactory(cellFactory);
 
         TableColumn<Step, String> titleColumn = new TableColumn<>(COLUMN_NAME_TITLE);
         titleColumn.setCellValueFactory(step -> new SimpleStringProperty(step.getValue().getTitle()));
+        titleColumn.setCellFactory(cellFactory);
 
         getColumns().add(tagColumn);
         getColumns().add(titleColumn);
