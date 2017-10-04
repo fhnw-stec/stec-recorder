@@ -4,6 +4,7 @@ import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.notification.NotificationController;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.scene.control.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -15,7 +16,7 @@ public final class StepHistoryTableView extends TableView<Step> {
     private static final String COLUMN_NAME_TITLE = "Title";
 
     public StepHistoryTableView(ObservableList<Step> steps, StepHistoryController historyController, NotificationController notificationController) {
-        super(steps);
+        super(new SortedList<>(steps, (s1, s2) -> steps.indexOf(s2) - steps.indexOf(s1))); // latest step at the top
 
         Callback<TableColumn<Step, String>, TableCell<Step, String>> cellFactory = (TableColumn<Step, String> column) -> new TableCell<Step, String>() {
             @Override
