@@ -1,0 +1,39 @@
+= STEC Recorder HOWTO
+
+== Using STEC for Live Coding
+
+=== Before: Prepare GitHub Repo
+
+. Create a new repository on https://github.com/[GitHub]
+. Clone the repository to your local machine
+. Launch STEC and select the folder containing your repository:
+
+  TODO: Screenshot
+
+=== During: Capture Steps
+
+. Write code in your favorite editor.
+. Capture progress as steps:
+
+  TODO: Screenshot
+
+. Inspect your step history (in visual or tabular form):
+
+  TODO: Screenshot
+
+. Edit a step via context menu:
+
+  TODO: Screenshot
+
+. Delete a step via context menu:
+
+  TODO: Screenshot
+
+=== After: Upload To GitHub
+
+. Push all your changes to GitHub
+. Verify with https://fhnw-stec.github.io/stec/[STEC Viewer]
+
+== Using STEC for Tutorials
+
+TODO
