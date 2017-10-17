@@ -93,7 +93,8 @@ final class StecController implements GigController, StepCaptureController, Step
         Map<String, Ref> tags = HashMap.ofAll(repository.getTags());
         RevWalk walk = new RevWalk(repository);
         ObjectId headId = repository.resolve(Constants.HEAD);
-        return tags.flatMap(tag -> loadStep(walk, tag._1, tag._2, headId));
+        Seq<Step> steps = tags.flatMap(tag -> loadStep(walk, tag._1, tag._2, headId));
+        return steps.sortBy(Step::getTag);
     }
 
     private static Try<Step> loadStep(RevWalk walk, String tagName, Ref tagRef, ObjectId headId) {
