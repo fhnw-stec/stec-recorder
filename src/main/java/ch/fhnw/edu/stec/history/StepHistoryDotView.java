@@ -7,7 +7,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.NumberBinding;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.scene.Cursor;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Tooltip;
@@ -23,25 +22,25 @@ public final class StepHistoryDotView extends Region {
     private static final Color DOT_DEFAULT_FILL = Color.web("#039ED366"); // official JavaFX blue (see modena.css)
     private static final Color DOT_HOVERED_FILL = Color.web("#039ED3");
 
-    public StepHistoryDotView(ObservableList<Step> steps, StepHistoryController historyController, NotificationController notificationController) {
+    public StepHistoryDotView(StepHistoryModel model, StepHistoryController historyController, NotificationController notificationController) {
         setMinHeight(3 * DOT_RADIUS);
 
-        steps.addListener((ListChangeListener<Step>) c -> {
+        model.getSteps().addListener((ListChangeListener<Step>) c -> {
             getChildren().clear();
-            getChildren().addAll(createDots(steps, historyController, notificationController));
+            getChildren().addAll(createDots(model, historyController, notificationController));
         });
 
-        getChildren().addAll(createDots(steps, historyController, notificationController));
+        getChildren().addAll(createDots(model, historyController, notificationController));
 
     }
 
-    private java.util.List<Circle> createDots(ObservableList<Step> steps, StepHistoryController historyController, NotificationController notificationController) {
+    private java.util.List<Circle> createDots(StepHistoryModel model, StepHistoryController historyController, NotificationController notificationController) {
 
         DoubleBinding y = heightProperty().divide(2);
-        DoubleBinding maxDx = widthProperty().subtract(2 * DOT_RADIUS).subtract(2 * PADDING_X).divide(steps.size() - 1);
+        DoubleBinding maxDx = widthProperty().subtract(2 * DOT_RADIUS).subtract(2 * PADDING_X).divide(model.getSteps().size() - 1);
         NumberBinding dx = Bindings.min(DOT_DEFAULT_SPACING, maxDx);
 
-        return List.ofAll(steps).zipWithIndex().map(t -> {
+        return List.ofAll(model.getSteps()).zipWithIndex().map(t -> {
             Step step = t._1;
             int stepIndex = t._2;
             NumberBinding x = dx.multiply(stepIndex).add(DOT_RADIUS).add(PADDING_X);
@@ -49,7 +48,7 @@ public final class StepHistoryDotView extends Region {
             circle.centerXProperty().bind(x);
             circle.centerYProperty().bind(y);
 
-            if (step.isHead()) {
+            if (model.isBeingEdited(step)) {
                 circle.setStroke(Color.BLACK);
             }
 

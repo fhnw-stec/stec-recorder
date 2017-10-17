@@ -4,6 +4,6 @@ import io.vavr.control.Try;
 
 public interface StepHistoryController {
 
-    Try<String> editStep(String tag);
+    Try<String> switchToEditMode(String tag);
 
 }

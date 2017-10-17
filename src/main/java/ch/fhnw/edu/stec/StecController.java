@@ -11,6 +11,7 @@ import ch.fhnw.edu.stec.notification.NotificationController;
 import ch.fhnw.edu.stec.notification.NotificationPopupDispatcher;
 import ch.fhnw.edu.stec.util.Labels;
 import io.vavr.collection.*;
+import io.vavr.control.Option;
 import io.vavr.control.Try;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -20,13 +21,17 @@ import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTag;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.util.FS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
@@ -50,6 +55,19 @@ final class StecController implements GigController, StepCaptureController, Step
 
         model.getNotifications().addListener(new NotificationPopupDispatcher(popupOwner));
         model.gigDirProperty().addListener((observable, oldValue, newValue) -> refresh());
+        model.captureModeProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue instanceof CaptureMode.Edit) {
+                String tag = ((CaptureMode.Edit) newValue).getTag();
+                Option<Step> stepOption = List.ofAll(model.getSteps()).find(s -> tag.equals(s.getTag()));
+                stepOption.forEach(step -> {
+                    model.titleProperty().setValue(step.getTitle());
+                    model.descriptionProperty().setValue(step.getDescription());
+                });
+            } else if (newValue instanceof CaptureMode.Normal) {
+                model.titleProperty().setValue("");
+                model.descriptionProperty().setValue("");
+            }
+        });
     }
 
     private static Try<Git> initGitRepo(File dir) {
@@ -89,26 +107,47 @@ final class StecController implements GigController, StepCaptureController, Step
         return STEP_PREFIX + (maxIntSuffix + 1);
     }
 
-    private static Seq<Step> loadSteps(Git git) throws IOException {
+    private static Seq<Step> loadSteps(Git git) {
         Repository repository = git.getRepository();
         Map<String, Ref> tags = HashMap.ofAll(repository.getTags());
-        RevWalk walk = new RevWalk(repository);
-        ObjectId headId = repository.resolve(Constants.HEAD);
-        Seq<Step> steps = tags.flatMap(tag -> loadStep(walk, tag._1, tag._2, headId));
+        Seq<Step> steps = tags.flatMap(tag -> loadStep(repository, tag._1, tag._2));
         return steps.sortBy(Step::getTag);
     }
 
-    private static Try<Step> loadStep(RevWalk walk, String tagName, Ref tagRef, ObjectId headId) {
+    private static Try<Step> loadStep(Repository repository, String tagName, Ref tagRef) {
+        RevWalk revWalk = new RevWalk(repository);
         try {
             ObjectId tagId = tagRef.getObjectId();
-            RevCommit revCommit = walk.parseCommit(tagId);
-            RevTag revTag = walk.parseTag(tagId);
-            boolean isHead = revCommit.getId().equals(headId);
-            Step step = new Step(tagName, revTag.getFullMessage(), isHead);
+            RevCommit commit = revWalk.parseCommit(tagId);
+            String description = loadDescription(repository, commit);
+            RevTag revTag = revWalk.parseTag(tagId);
+            Step step = new Step(tagName, revTag.getFullMessage(), description);
             return Try.success(step);
         } catch (Throwable t) {
             LOG.error("Loading step details failed", t);
             return Try.failure(t);
+        } finally {
+            revWalk.dispose();
+        }
+    }
+
+    private static String loadDescription(Repository repository, RevCommit commit) throws IOException {
+        TreeWalk treeWalk = new TreeWalk(repository);
+        treeWalk.addTree(commit.getTree());
+        treeWalk.setRecursive(true);
+        treeWalk.setFilter(PathFilter.create(README_FILE_NAME));
+
+        if (treeWalk.next()) {
+            ObjectId objectId = treeWalk.getObjectId(0);
+            ObjectLoader loader = repository.open(objectId);
+
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            loader.copyTo(bos);
+
+            return bos.toString(StandardCharsets.UTF_8.name());
+        } else {
+            LOG.warn("Unable to load description (missing README.adoc in " + commit + ")");
+            return "";
         }
     }
 
@@ -129,6 +168,8 @@ final class StecController implements GigController, StepCaptureController, Step
     private void initModel() {
         chooseDirectory(new File(System.getProperty("user.home")));
         model.captureModeProperty().set(CaptureMode.normal());
+        model.titleProperty().setValue("");
+        model.descriptionProperty().setValue("");
     }
 
     @Override
@@ -216,7 +257,7 @@ final class StecController implements GigController, StepCaptureController, Step
     }
 
     @Override
-    public Try<String> editStep(String tag) {
+    public Try<String> switchToEditMode(String tag) {
         try {
             File dir = model.gigDirProperty().get().getDir();
             Git git = Git.open(dir);

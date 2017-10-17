@@ -4,12 +4,12 @@ public final class Step {
 
     private final String tag;
     private final String title;
-    private final boolean head;
+    private final String description;
 
-    public Step(String tag, String title, boolean head) {
+    public Step(String tag, String title, String description) {
         this.tag = tag;
         this.title = title;
-        this.head = head;
+        this.description = description;
     }
 
     public String getTag() {
@@ -20,8 +20,8 @@ public final class Step {
         return title;
     }
 
-    public boolean isHead() {
-        return head;
+    public String getDescription() {
+        return description;
     }
 
 }

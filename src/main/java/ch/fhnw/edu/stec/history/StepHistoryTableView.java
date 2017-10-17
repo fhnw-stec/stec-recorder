@@ -3,7 +3,6 @@ package ch.fhnw.edu.stec.history;
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.notification.NotificationController;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.*;
 import javafx.scene.text.Font;
@@ -15,8 +14,8 @@ public final class StepHistoryTableView extends TableView<Step> {
     private static final String COLUMN_NAME_TAG = "Tag";
     private static final String COLUMN_NAME_TITLE = "Title";
 
-    public StepHistoryTableView(ObservableList<Step> steps, StepHistoryController historyController, NotificationController notificationController) {
-        super(new SortedList<>(steps, (s1, s2) -> steps.indexOf(s2) - steps.indexOf(s1))); // latest step at the top
+    public StepHistoryTableView(StepHistoryModel model, StepHistoryController historyController, NotificationController notificationController) {
+        super(new SortedList<>(model.getSteps(), (s1, s2) -> model.getSteps().indexOf(s2) - model.getSteps().indexOf(s1))); // latest step at the top
 
         Callback<TableColumn<Step, String>, TableCell<Step, String>> cellFactory = (TableColumn<Step, String> column) -> new TableCell<Step, String>() {
             @Override
@@ -25,7 +24,7 @@ public final class StepHistoryTableView extends TableView<Step> {
                 if (!empty) {
                     Step step = (Step) getTableRow().getItem();
                     Label label = new Label(item);
-                    if (step != null && step.isHead()) {
+                    if (model.isBeingEdited(step)) {
                         // No bold with default font on macOS Sierra (https://bugs.openjdk.java.net/browse/JDK-8176835)
                         label.setFont(Font.font("Helvetica", FontWeight.BOLD, 13));
                     } else {

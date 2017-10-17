@@ -53,8 +53,8 @@ final class StecView extends VBox {
         return gigPane;
     }
 
-    private static TitledPane createStepCapturePane(StecController controller) {
-        StepCaptureView stepCaptureView = new StepCaptureView(controller, controller);
+    private static TitledPane createStepCapturePane(StecModel model, StecController controller) {
+        StepCaptureView stepCaptureView = new StepCaptureView(model.titleProperty(), model.descriptionProperty(), controller, controller);
         stepCaptureView.setMinHeight(0);
         TitledPane stepCapturePane = new TitledPane(STEP_CAPTURE_SECTION_TITLE, stepCaptureView);
         stepCapturePane.setMaxHeight(Double.MAX_VALUE);
@@ -63,11 +63,11 @@ final class StecView extends VBox {
     }
 
     private static VBox createStepHistoryPane(StecModel model, StecController controller) {
-        StepHistoryDotView stepHistoryDotView = new StepHistoryDotView(model.getSteps(), controller, controller);
+        StepHistoryDotView stepHistoryDotView = new StepHistoryDotView(model, controller, controller);
         Tab dotViewTab = new Tab(DOT_VIEW_TAB_TITLE, stepHistoryDotView);
         dotViewTab.setClosable(false);
 
-        StepHistoryTableView stepHistoryTableView = new StepHistoryTableView(model.getSteps(), controller, controller);
+        StepHistoryTableView stepHistoryTableView = new StepHistoryTableView(model, controller, controller);
         Tab stepTableTab = new Tab(STEP_TABLE_TAB_TITLE, stepHistoryTableView);
         stepTableTab.setClosable(false);
 
@@ -99,7 +99,7 @@ final class StecView extends VBox {
     }
 
     private static SplitPane createStepsPane(StecModel model, StecController controller) {
-        TitledPane stepCapturePane = createStepCapturePane(controller);
+        TitledPane stepCapturePane = createStepCapturePane(model, controller);
         Pane stepHistoryPane = createStepHistoryPane(model, controller);
 
         SplitPane stepsSplitPane = new SplitPane(stepCapturePane, stepHistoryPane);

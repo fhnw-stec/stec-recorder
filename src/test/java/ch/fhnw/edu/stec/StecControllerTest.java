@@ -186,19 +186,19 @@ class StecControllerTest {
 
         Step firstStep = steps.get(0);
         assertEquals("Step 1", firstStep.getTitle());
-        assertFalse(firstStep.isHead());
+        assertEquals("Description of Step 1", firstStep.getDescription());
 
         Step secondStep = steps.get(1);
         assertEquals("Step 2", secondStep.getTitle());
-        assertFalse(secondStep.isHead());
+        assertEquals("Description of Step 2", secondStep.getDescription());
 
         Step thirdStep = steps.get(2);
         assertEquals("Step 3", thirdStep.getTitle());
-        assertTrue(thirdStep.isHead());
+        assertEquals("Description of Step 3", thirdStep.getDescription());
     }
 
     @Test
-    void editStep() throws IOException {
+    void switchToEditMode() throws IOException {
         File gigDir = tmpFolder.newFolder();
         StecModel model = new StecModel();
         StecController controller = createInitializedGig(gigDir, model);
@@ -207,16 +207,16 @@ class StecControllerTest {
         assertTrue(controller.captureStep("Step 2", "Description of Step 2").isSuccess());
         assertTrue(controller.captureStep("Step 3", "Description of Step 3").isSuccess());
 
-        assertTrue(model.getSteps().get(2).isHead());
+        Step stepToEdit = model.getSteps().get(0);
+        String tag = stepToEdit.getTag();
 
-        String tag = model.getSteps().get(0).getTag();
-        Try<String> result = controller.editStep(tag);
+        Try<String> result = controller.switchToEditMode(tag);
         assertTrue(result.isSuccess());
 
-        assertFalse(model.getSteps().get(2).isHead());
-        assertTrue(model.getSteps().get(0).isHead());
-
         assertTrue(model.captureModeProperty().get() instanceof CaptureMode.Edit);
+
+        assertEquals(stepToEdit.getTitle(), model.titleProperty().get());
+        assertEquals(stepToEdit.getDescription(), model.descriptionProperty().get());
     }
 
 }
