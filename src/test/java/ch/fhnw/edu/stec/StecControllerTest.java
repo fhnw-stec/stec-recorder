@@ -1,5 +1,6 @@
 package ch.fhnw.edu.stec;
 
+import ch.fhnw.edu.stec.model.CaptureMode;
 import ch.fhnw.edu.stec.model.GigDir;
 import ch.fhnw.edu.stec.model.Step;
 import io.vavr.collection.List;
@@ -197,7 +198,7 @@ class StecControllerTest {
     }
 
     @Test
-    void checkoutStep() throws IOException {
+    void editStep() throws IOException {
         File gigDir = tmpFolder.newFolder();
         StecModel model = new StecModel();
         StecController controller = createInitializedGig(gigDir, model);
@@ -208,11 +209,14 @@ class StecControllerTest {
 
         assertTrue(model.getSteps().get(2).isHead());
 
-        Try<String> result = controller.checkoutStep(model.getSteps().get(0).getTag());
+        String tag = model.getSteps().get(0).getTag();
+        Try<String> result = controller.editStep(tag);
         assertTrue(result.isSuccess());
 
         assertFalse(model.getSteps().get(2).isHead());
         assertTrue(model.getSteps().get(0).isHead());
+
+        assertTrue(model.captureModeProperty().get() instanceof CaptureMode.Edit);
     }
 
 }

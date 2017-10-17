@@ -2,12 +2,13 @@ package ch.fhnw.edu.stec;
 
 import ch.fhnw.edu.stec.capture.StepCaptureController;
 import ch.fhnw.edu.stec.gig.GigController;
+import ch.fhnw.edu.stec.history.StepHistoryController;
+import ch.fhnw.edu.stec.model.CaptureMode;
 import ch.fhnw.edu.stec.model.GigDir;
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.notification.Notification;
 import ch.fhnw.edu.stec.notification.NotificationController;
 import ch.fhnw.edu.stec.notification.NotificationPopupDispatcher;
-import ch.fhnw.edu.stec.history.StepHistoryController;
 import ch.fhnw.edu.stec.util.Labels;
 import io.vavr.collection.*;
 import io.vavr.control.Try;
@@ -127,6 +128,7 @@ final class StecController implements GigController, StepCaptureController, Step
 
     private void initModel() {
         chooseDirectory(new File(System.getProperty("user.home")));
+        model.captureModeProperty().set(CaptureMode.normal());
     }
 
     @Override
@@ -171,11 +173,25 @@ final class StecController implements GigController, StepCaptureController, Step
 
             git.commit().setMessage(Labels.COMMIT_MSG).call();
 
-            Set<String> existingTags = HashSet.ofAll(git.getRepository().getTags().keySet());
-            String tagName = nextTag(existingTags);
-            git.tag().setName(tagName).setMessage(title).call();
+            String tagName;
+            if (model.captureModeProperty().get() instanceof CaptureMode.Edit) {
+                tagName = ((CaptureMode.Edit) model.captureModeProperty().get()).getTag();
+            } else {
+                Set<String> existingTags = HashSet.ofAll(git.getRepository().getTags().keySet());
+                tagName = nextTag(existingTags);
+            }
+            git.tag()
+                    .setName(tagName)
+                    .setMessage(title)
 
-            refresh();
+                    // required for edit mode (moving rather than creating a tag)
+                    .setForceUpdate(true)
+                    .setAnnotated(true)
+
+                    .call();
+
+
+            switchToNormalMode(git);
 
             return Try.success(Labels.CAPTURE_SUCCESSFUL);
         } catch (GitAPIException | IOException e) {
@@ -183,8 +199,24 @@ final class StecController implements GigController, StepCaptureController, Step
         }
     }
 
+    private void switchToNormalMode(Git git) throws GitAPIException {
+        refresh();
+
+        Step headStep = model.getSteps().get(model.getSteps().size() - 1);
+        String tag = headStep.getTag();
+
+        git.checkout()
+                .setName(tag)
+                .setStartPoint(tag)
+                .call();
+
+        model.captureModeProperty().setValue(CaptureMode.normal());
+
+        refresh();
+    }
+
     @Override
-    public Try<String> checkoutStep(String tag) {
+    public Try<String> editStep(String tag) {
         try {
             File dir = model.gigDirProperty().get().getDir();
             Git git = Git.open(dir);
@@ -194,9 +226,11 @@ final class StecController implements GigController, StepCaptureController, Step
                     .setStartPoint(tag)
                     .call();
 
+            model.captureModeProperty().set(CaptureMode.edit(tag));
+
             refresh();
 
-            return Try.success(Labels.CHECKOUT_SUCCESSFUL);
+            return Try.success(Labels.SWITCHING_TO_EDIT_MODE_SUCCESSFUL);
         } catch (Throwable t) {
             return Try.failure(t);
         }
