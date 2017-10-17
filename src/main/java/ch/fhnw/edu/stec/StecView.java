@@ -1,11 +1,12 @@
 package ch.fhnw.edu.stec;
 
 import ch.fhnw.edu.stec.capture.StepCaptureView;
-import ch.fhnw.edu.stec.history.StepHistoryDotView;
 import ch.fhnw.edu.stec.gig.GigChooserView;
 import ch.fhnw.edu.stec.gig.GigStatusView;
-import ch.fhnw.edu.stec.model.GigDir;
+import ch.fhnw.edu.stec.history.StepHistoryDotView;
 import ch.fhnw.edu.stec.history.StepHistoryTableView;
+import ch.fhnw.edu.stec.model.GigDir;
+import ch.fhnw.edu.stec.util.Glyphs;
 import ch.fhnw.edu.stec.util.Labels;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -18,9 +19,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
-import org.controlsfx.glyphfont.FontAwesome;
-import org.controlsfx.glyphfont.GlyphFont;
-import org.controlsfx.glyphfont.GlyphFontRegistry;
 
 import static ch.fhnw.edu.stec.util.Labels.*;
 
@@ -77,8 +75,7 @@ final class StecView extends VBox {
         stepHistoryPane.setMaxHeight(Double.MAX_VALUE);
         stepHistoryPane.setCollapsible(false);
 
-        GlyphFont fontAwesome = GlyphFontRegistry.font("FontAwesome");
-        Button refreshButton = new Button("", fontAwesome.create(FontAwesome.Glyph.REFRESH));
+        Button refreshButton = new Button("", Glyphs.REFRESH);
         refreshButton.setTooltip(new Tooltip(Labels.REFRESH_BUTTON_TOOLTIP));
         refreshButton.setOnAction(e -> controller.refresh());
 
@@ -106,7 +103,7 @@ final class StecView extends VBox {
         stepsSplitPane.setOrientation(Orientation.VERTICAL);
         BooleanBinding gigReady = Bindings.createBooleanBinding(() -> (model.gigDirProperty().get() instanceof GigDir.ReadyGigDir), model.gigDirProperty());
         stepsSplitPane.disableProperty().bind(gigReady.not());
-        stepsSplitPane.setDividerPositions(0.8);
+        stepsSplitPane.setDividerPositions(0.85);
 
         return stepsSplitPane;
     }

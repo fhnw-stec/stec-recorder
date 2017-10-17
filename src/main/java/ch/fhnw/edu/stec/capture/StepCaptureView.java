@@ -2,6 +2,7 @@ package ch.fhnw.edu.stec.capture;
 
 import ch.fhnw.edu.stec.notification.NotificationController;
 import ch.fhnw.edu.stec.util.AsciidoctorRenderer;
+import ch.fhnw.edu.stec.util.Glyphs;
 import ch.fhnw.edu.stec.util.Labels;
 import io.vavr.control.Try;
 import javafx.beans.binding.BooleanBinding;
@@ -20,6 +21,8 @@ import javafx.scene.web.WebView;
 import static ch.fhnw.edu.stec.util.Labels.*;
 
 public final class StepCaptureView extends VBox {
+
+    private static final Insets CAPTURE_BUTTON_PADDING = new Insets(30);
 
     public StepCaptureView(StringProperty titleProperty,
                            StringProperty descriptionProperty,
@@ -43,7 +46,8 @@ public final class StepCaptureView extends VBox {
 
         SplitPane editor = createDescriptionEditor(descriptionField);
 
-        Button captureButton = new Button(STEP_CAPTURE_BUTTON_LABEL);
+        Button captureButton = new Button(STEP_CAPTURE_BUTTON_LABEL, Glyphs.CAMERA);
+        captureButton.setPadding(CAPTURE_BUTTON_PADDING);
         captureButton.setMaxWidth(Double.MAX_VALUE);
 
         captureButton.setOnAction(e -> {
