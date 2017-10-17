@@ -31,7 +31,14 @@
 
 === After: Upload To GitHub
 
-. Push all your changes to GitHub
+. Push all your changes to GitHub:
+
+----
+git push -f --tags
+----
+
+WARNING: The scary force flag `-f` is only necessary if you edited steps which were already pushed before
+
 . Verify with https://fhnw-stec.github.io/stec/[STEC Viewer]
 
 == Using STEC for Tutorials
