@@ -6,4 +6,6 @@ public interface StepHistoryController {
 
     Try<String> switchToEditMode(String tag);
 
+    Try<String> deleteStep(String tag);
+
 }

@@ -278,6 +278,22 @@ final class StecController implements GigController, StepCaptureController, Step
     }
 
     @Override
+    public Try<String> deleteStep(String tag) {
+        try {
+            File dir = model.gigDirProperty().get().getDir();
+            Git git = Git.open(dir);
+
+            git.tagDelete().setTags(tag).call();
+
+            refresh();
+
+            return Try.success(Labels.DELETE_STEP_SUCCESSFUL);
+        } catch (Throwable t) {
+            return Try.failure(t);
+        }
+    }
+
+    @Override
     public void notifyError(String message) {
         LOG.error(message);
         appendToModel(Notification.error(message));

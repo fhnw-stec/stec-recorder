@@ -31,6 +31,10 @@ public interface Labels {
     String SWITCHING_TO_EDIT_MODE_SUCCESSFUL = "Switched to Edit Mode";
     String SWITCHING_TO_EDIT_MODE_FAILED = "Switching to Edit Mode failed";
 
+    String DELETE_STEP_SUCCESSFUL = "Delete successful";
+    String DELETE_STEP_FAILED = "Delete failed";
+
     String EDIT_CONTEXT_MENU_ITEM = "Edit";
+    String DELETE_CONTEXT_MENU_ITEM = "Delete";
 
 }

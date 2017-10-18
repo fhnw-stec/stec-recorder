@@ -9,16 +9,28 @@ import javafx.scene.control.MenuItem;
 
 import java.util.function.Supplier;
 
-public final class StepHistoryContextMenu extends ContextMenu {
+final class StepHistoryContextMenu extends ContextMenu {
 
-    public StepHistoryContextMenu(Supplier<Step> stepSupplier, StepHistoryController historyController, NotificationController notificationController) {
-        MenuItem checkoutItem = new MenuItem(Labels.EDIT_CONTEXT_MENU_ITEM);
-        checkoutItem.setOnAction(e -> {
+    StepHistoryContextMenu(Supplier<Step> stepSupplier, StepHistoryController historyController, NotificationController notificationController) {
+
+        MenuItem editItem = new MenuItem(Labels.EDIT_CONTEXT_MENU_ITEM);
+        editItem.setOnAction(e -> {
             Try<String> result = historyController.switchToEditMode(stepSupplier.get().getTag());
-            result.onSuccess(notificationController::notifyInfo);
-            result.onFailure(error -> notificationController.notifyError(Labels.SWITCHING_TO_EDIT_MODE_FAILED, error));
+            onResult(notificationController, result, Labels.SWITCHING_TO_EDIT_MODE_FAILED);
         });
-        getItems().add(checkoutItem);
+
+        MenuItem deleteItem = new MenuItem(Labels.DELETE_CONTEXT_MENU_ITEM);
+        deleteItem.setOnAction(e -> {
+            Try<String> result = historyController.deleteStep(stepSupplier.get().getTag());
+            onResult(notificationController, result, Labels.DELETE_STEP_FAILED);
+        });
+
+        getItems().addAll(editItem, deleteItem);
+    }
+
+    private void onResult(NotificationController notificationController, Try<String> result, String msg) {
+        result.onSuccess(notificationController::notifyInfo);
+        result.onFailure(error -> notificationController.notifyError(msg, error));
     }
 
 }
