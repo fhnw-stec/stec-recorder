@@ -6,9 +6,6 @@ public interface Labels {
     String STEP_CAPTURE_SECTION_TITLE = "Capture Step";
     String STEP_HISTORY_SECTION_TITLE = "Step History";
 
-    String DOT_VIEW_TAB_TITLE = "Visual";
-    String STEP_TABLE_TAB_TITLE = "Tabular";
-
     String DIR_CHOOSER_BUTTON_LABEL = "...";
     String INIT_BUTTON_LABEL = "Initialize";
 
@@ -28,13 +25,15 @@ public interface Labels {
     String CAPTURE_SUCCESSFUL = "Capture successful";
     String CAPTURE_FAILED = "Capture failed";
 
-    String SWITCHING_TO_EDIT_MODE_SUCCESSFUL = "Switched to Edit Mode";
-    String SWITCHING_TO_EDIT_MODE_FAILED = "Switching to Edit Mode failed";
+    String CHECKOUT_SUCCESSFUL = "Checkout successful";
+    String CHECKOUT_FAILED = "Checkout failed";
 
     String DELETE_STEP_SUCCESSFUL = "Delete successful";
     String DELETE_STEP_FAILED = "Delete failed";
 
-    String EDIT_CONTEXT_MENU_ITEM = "Edit";
     String DELETE_CONTEXT_MENU_ITEM = "Delete";
+
+    String ENTERING_CAPTURE_MODE_SUCCESSFUL = "Ready for a next step";
+    String ENTERING_CAPTURE_MODE_FAILED = "Entering capture mode failed";
 
 }

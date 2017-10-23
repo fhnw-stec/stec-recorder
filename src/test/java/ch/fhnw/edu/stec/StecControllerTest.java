@@ -1,6 +1,6 @@
 package ch.fhnw.edu.stec;
 
-import ch.fhnw.edu.stec.model.CaptureMode;
+import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.GigDir;
 import ch.fhnw.edu.stec.model.Step;
 import io.vavr.collection.List;
@@ -208,12 +208,11 @@ class StecControllerTest {
         assertTrue(controller.captureStep("Step 3", "Description of Step 3").isSuccess());
 
         Step stepToEdit = model.getSteps().get(0);
-        String tag = stepToEdit.getTag();
 
-        Try<String> result = controller.switchToEditMode(tag);
+        Try<String> result = controller.switchToEditMode(stepToEdit);
         assertTrue(result.isSuccess());
 
-        assertTrue(model.captureModeProperty().get() instanceof CaptureMode.Edit);
+        assertTrue(model.interactionModeProperty().get() instanceof InteractionMode.Edit);
 
         assertEquals(stepToEdit.getTitle(), model.titleProperty().get());
         assertEquals(stepToEdit.getDescription(), model.descriptionProperty().get());

@@ -13,24 +13,14 @@ final class StepHistoryContextMenu extends ContextMenu {
 
     StepHistoryContextMenu(Supplier<Step> stepSupplier, StepHistoryController historyController, NotificationController notificationController) {
 
-        MenuItem editItem = new MenuItem(Labels.EDIT_CONTEXT_MENU_ITEM);
-        editItem.setOnAction(e -> {
-            Try<String> result = historyController.switchToEditMode(stepSupplier.get().getTag());
-            onResult(notificationController, result, Labels.SWITCHING_TO_EDIT_MODE_FAILED);
-        });
-
         MenuItem deleteItem = new MenuItem(Labels.DELETE_CONTEXT_MENU_ITEM);
         deleteItem.setOnAction(e -> {
-            Try<String> result = historyController.deleteStep(stepSupplier.get().getTag());
-            onResult(notificationController, result, Labels.DELETE_STEP_FAILED);
+            Try<String> result = historyController.deleteStep(stepSupplier.get());
+            result.onSuccess(notificationController::notifyInfo);
+            result.onFailure(error -> notificationController.notifyError(Labels.DELETE_STEP_FAILED, error));
         });
 
-        getItems().addAll(editItem, deleteItem);
-    }
-
-    private void onResult(NotificationController notificationController, Try<String> result, String msg) {
-        result.onSuccess(notificationController::notifyInfo);
-        result.onFailure(error -> notificationController.notifyError(msg, error));
+        getItems().addAll(deleteItem);
     }
 
 }

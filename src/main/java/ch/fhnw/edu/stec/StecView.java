@@ -4,7 +4,6 @@ import ch.fhnw.edu.stec.capture.StepCaptureView;
 import ch.fhnw.edu.stec.gig.GigChooserView;
 import ch.fhnw.edu.stec.gig.GigStatusView;
 import ch.fhnw.edu.stec.history.StepHistoryDotView;
-import ch.fhnw.edu.stec.history.StepHistoryTableView;
 import ch.fhnw.edu.stec.model.GigDir;
 import ch.fhnw.edu.stec.util.Glyphs;
 import ch.fhnw.edu.stec.util.Labels;
@@ -62,16 +61,8 @@ final class StecView extends VBox {
 
     private static VBox createStepHistoryPane(StecModel model, StecController controller) {
         StepHistoryDotView stepHistoryDotView = new StepHistoryDotView(model, controller, controller);
-        Tab dotViewTab = new Tab(DOT_VIEW_TAB_TITLE, stepHistoryDotView);
-        dotViewTab.setClosable(false);
 
-        StepHistoryTableView stepHistoryTableView = new StepHistoryTableView(model, controller, controller);
-        Tab stepTableTab = new Tab(STEP_TABLE_TAB_TITLE, stepHistoryTableView);
-        stepTableTab.setClosable(false);
-
-        TabPane tabPane = new TabPane(dotViewTab, stepTableTab);
-
-        TitledPane stepHistoryPane = new TitledPane(STEP_HISTORY_SECTION_TITLE, tabPane);
+        TitledPane stepHistoryPane = new TitledPane(STEP_HISTORY_SECTION_TITLE, stepHistoryDotView);
         stepHistoryPane.setMaxHeight(Double.MAX_VALUE);
         stepHistoryPane.setCollapsible(false);
 

@@ -2,6 +2,9 @@ package ch.fhnw.edu.stec.model;
 
 public final class Step {
 
+    /** Represents the next step about to be captured. */
+    public static final Step UPCOMING_STEP = new Step("", "", "");
+
     private final String tag;
     private final String title;
     private final String description;

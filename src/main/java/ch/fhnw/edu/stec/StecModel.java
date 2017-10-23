@@ -1,7 +1,7 @@
 package ch.fhnw.edu.stec;
 
 import ch.fhnw.edu.stec.history.StepHistoryModel;
-import ch.fhnw.edu.stec.model.CaptureMode;
+import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.GigDir;
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.notification.Notification;
@@ -14,10 +14,14 @@ import javafx.collections.ObservableList;
 
 public final class StecModel implements StepHistoryModel {
 
-    private final ObjectProperty<GigDir> gigDir = new SimpleObjectProperty<>();
-    private final ObservableList<Step> steps = FXCollections.observableArrayList();
     private final ObservableList<Notification> notifications = FXCollections.observableArrayList();
-    private final ObjectProperty<CaptureMode> captureMode = new SimpleObjectProperty<>();
+
+    private final ObjectProperty<GigDir> gigDir = new SimpleObjectProperty<>();
+
+    private final ObservableList<Step> steps = FXCollections.observableArrayList();
+
+    private final ObjectProperty<InteractionMode> interactionMode = new SimpleObjectProperty<>();
+
     private final StringProperty title = new SimpleStringProperty();
     private final StringProperty description = new SimpleStringProperty();
 
@@ -35,8 +39,8 @@ public final class StecModel implements StepHistoryModel {
     }
 
     @Override
-    public ObjectProperty<CaptureMode> captureModeProperty() {
-        return captureMode;
+    public ObjectProperty<InteractionMode> interactionModeProperty() {
+        return interactionMode;
     }
 
     StringProperty titleProperty() {
