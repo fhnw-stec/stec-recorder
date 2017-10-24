@@ -1,5 +1,6 @@
 package ch.fhnw.edu.stec;
 
+import ch.fhnw.edu.stec.notification.NotificationPopupDispatcher;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -33,9 +34,11 @@ public final class StecApp extends Application {
     public void start(Stage stage) {
 
         StecModel model = new StecModel();
-        StecController controller = new StecController(stage, model);
+        StecController controller = new StecController(model);
         StecView view = new StecView(model, stage.getOwner(), controller);
         Scene scene = new Scene(view);
+
+        model.getNotifications().addListener(new NotificationPopupDispatcher(stage));
 
         stage.setTitle(TITLE + getVersionSuffix());
         stage.setScene(scene);

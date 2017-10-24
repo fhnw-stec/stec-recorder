@@ -8,13 +8,10 @@ import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.notification.Notification;
 import ch.fhnw.edu.stec.notification.NotificationController;
-import ch.fhnw.edu.stec.notification.NotificationPopupDispatcher;
 import ch.fhnw.edu.stec.util.Labels;
 import io.vavr.collection.*;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
-import javafx.application.Platform;
-import javafx.stage.Stage;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.*;
@@ -48,10 +45,9 @@ final class StecController implements GigController, StepFormController, StepHis
 
     private final StecModel model;
 
-    StecController(Stage popupOwner, StecModel model) {
+    StecController(StecModel model) {
         this.model = model;
 
-        model.getNotifications().addListener(new NotificationPopupDispatcher(popupOwner));
         model.gigDirProperty().addListener((observable, oldValue, newValue) -> refresh());
         model.interactionModeProperty().addListener((observable, oldValue, newValue) -> {
             Option<Step> stepOption = model.getStepByTag(newValue.getTag());
@@ -145,6 +141,13 @@ final class StecController implements GigController, StepFormController, StepHis
             LOG.warn("Unable to load description (missing README.adoc in " + commit + ")");
             return "";
         }
+    }
+
+
+    @Override
+    public List<Notification> appendNotification(Notification notification) {
+        model.getNotifications().add(notification);
+        return List.ofAll(model.getNotifications());
     }
 
     public void refresh() {
@@ -327,40 +330,6 @@ final class StecController implements GigController, StepFormController, StepHis
         } catch (Throwable t) {
             return Try.failure(t);
         }
-    }
-
-    @Override
-    public void notifyError(String message) {
-        LOG.error(message);
-        appendToModel(Notification.error(message));
-    }
-
-    @Override
-    public void notifyError(String message, Throwable t) {
-        LOG.error(message, t);
-        appendToModel(Notification.error(message));
-    }
-
-    @Override
-    public void notifyWarn(String message) {
-        LOG.warn(message);
-        appendToModel(Notification.warn(message));
-    }
-
-    @Override
-    public void notifyInfo(String message) {
-        LOG.info(message);
-        appendToModel(Notification.info(message));
-    }
-
-    @Override
-    public void notifySilent(String message) {
-        LOG.debug(message);
-        appendToModel(Notification.silent(message));
-    }
-
-    private void appendToModel(Notification notification) {
-        Platform.runLater(() -> model.getNotifications().add(notification));
     }
 
 }

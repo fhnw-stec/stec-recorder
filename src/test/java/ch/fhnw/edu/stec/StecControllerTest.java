@@ -34,13 +34,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(ExternalResourceSupport.class)
 class StecControllerTest {
 
-    private static final Stage POPUP_OWNER = null; // creating an actual Stage could fail on a headless CI server
-
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
 
     private static StecController createInitializedGig(File gigDir, StecModel model) {
-        StecController controller = new StecController(POPUP_OWNER, model);
+        StecController controller = new StecController(model);
         controller.chooseDirectory(gigDir);
         controller.initGig();
         return controller;
@@ -49,7 +47,7 @@ class StecControllerTest {
     @Test
     void chooseDirectory() throws IOException {
         StecModel model = new StecModel();
-        StecController controller = new StecController(POPUP_OWNER, model);
+        StecController controller = new StecController(model);
 
         File initialDir = tmpFolder.newFolder("initial");
         model.gigDirProperty().set(new GigDir.UninitializedGigDir(initialDir));
@@ -83,7 +81,7 @@ class StecControllerTest {
         File gitignoreFile = new File(gigDir, StecController.GIT_IGNORE_FILE_NAME);
 
         StecModel model = new StecModel();
-        StecController controller = new StecController(POPUP_OWNER, model);
+        StecController controller = new StecController(model);
         controller.chooseDirectory(gigDir);
 
         assertTrue(model.gigDirProperty().get() instanceof GigDir.UninitializedGigDir);
