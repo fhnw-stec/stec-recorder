@@ -3,7 +3,7 @@ package ch.fhnw.edu.stec.util;
 public interface Labels {
 
     String GIG_SECTION_TITLE = "Gig Directory";
-    String STEP_CAPTURE_SECTION_TITLE = "Capture Step";
+    String STEP_FORM_SECTION_TITLE = "Active Step";
     String STEP_HISTORY_SECTION_TITLE = "Step History";
 
     String DIR_CHOOSER_BUTTON_LABEL = "...";
@@ -25,6 +25,9 @@ public interface Labels {
     String CAPTURE_SUCCESSFUL = "Capture successful";
     String CAPTURE_FAILED = "Capture failed";
 
+    String SAVE_SUCCESSFUL = "Save successful";
+    String SAVE_FAILED = "Save failed";
+
     String CHECKOUT_SUCCESSFUL = "Checkout successful";
     String CHECKOUT_FAILED = "Checkout failed";
 
@@ -36,4 +39,6 @@ public interface Labels {
     String ENTERING_CAPTURE_MODE_SUCCESSFUL = "Ready for a next step";
     String ENTERING_CAPTURE_MODE_FAILED = "Entering capture mode failed";
 
+    String SAVE = "Save";
+    String RESET = "Reset";
 }

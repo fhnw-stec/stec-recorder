@@ -1,16 +1,17 @@
 package ch.fhnw.edu.stec;
 
-import ch.fhnw.edu.stec.capture.StepCaptureController;
+import ch.fhnw.edu.stec.form.StepFormController;
 import ch.fhnw.edu.stec.gig.GigController;
 import ch.fhnw.edu.stec.history.StepHistoryController;
-import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.GigDir;
+import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.notification.Notification;
 import ch.fhnw.edu.stec.notification.NotificationController;
 import ch.fhnw.edu.stec.notification.NotificationPopupDispatcher;
 import ch.fhnw.edu.stec.util.Labels;
 import io.vavr.collection.*;
+import io.vavr.control.Option;
 import io.vavr.control.Try;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -34,7 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
-final class StecController implements GigController, StepCaptureController, StepHistoryController, NotificationController {
+final class StecController implements GigController, StepFormController, StepHistoryController, NotificationController {
 
     static final String GIT_REPO = ".git";
     static final String GIT_IGNORE_FILE_NAME = ".gitignore";
@@ -53,9 +54,11 @@ final class StecController implements GigController, StepCaptureController, Step
         model.getNotifications().addListener(new NotificationPopupDispatcher(popupOwner));
         model.gigDirProperty().addListener((observable, oldValue, newValue) -> refresh());
         model.interactionModeProperty().addListener((observable, oldValue, newValue) -> {
-            Step step = newValue.getStep();
-            model.titleProperty().setValue(step.getTitle());
-            model.descriptionProperty().setValue(step.getDescription());
+            Option<Step> stepOption = model.getStepByTag(newValue.getTag());
+            stepOption.forEach(step -> {
+                model.titleProperty().setValue(step.getTitle());
+                model.descriptionProperty().setValue(step.getDescription());
+            });
         });
 
         initModel();
@@ -160,7 +163,7 @@ final class StecController implements GigController, StepCaptureController, Step
 
     private void initModel() {
         chooseDirectory(new File(System.getProperty("user.home")));
-        model.interactionModeProperty().setValue(InteractionMode.capture(Step.UPCOMING_STEP));
+        model.interactionModeProperty().setValue(InteractionMode.capture(Step.UPCOMING_STEP_TAG));
     }
 
     @Override
@@ -202,17 +205,12 @@ final class StecController implements GigController, StepCaptureController, Step
             Files.write(new File(dir, README_FILE_NAME).toPath(), description.getBytes());
 
             git.add().addFilepattern(".").call();
-            git.add().setUpdate(true).addFilepattern(".").call();
 
             git.commit().setMessage(Labels.COMMIT_MSG).call();
 
-            String tag;
-            if (model.interactionModeProperty().get() instanceof InteractionMode.Edit) {
-                tag = model.interactionModeProperty().get().getStep().getTag();
-            } else {
-                Set<String> existingTags = HashSet.ofAll(git.getRepository().getTags().keySet());
-                tag = nextTag(existingTags);
-            }
+            Set<String> existingTags = HashSet.ofAll(git.getRepository().getTags().keySet());
+            String tag = nextTag(existingTags);
+
             git.tag()
                     .setName(tag)
                     .setMessage(title)
@@ -227,6 +225,38 @@ final class StecController implements GigController, StepCaptureController, Step
             switchToCaptureModeImpl(git);
 
             return Try.success(Labels.CAPTURE_SUCCESSFUL);
+        } catch (GitAPIException | IOException e) {
+            return Try.failure(e);
+        }
+    }
+
+    @Override
+    public Try<String> saveStep(String tag, String title, String description) {
+        try {
+            File dir = model.gigDirProperty().get().getDir();
+            Git git = Git.open(dir);
+
+            Files.write(new File(dir, README_FILE_NAME).toPath(), description.getBytes());
+
+            git.add().setUpdate(true).addFilepattern(README_FILE_NAME).call();
+
+            git.commit().setMessage(Labels.COMMIT_MSG).call();
+
+            git.tag()
+                    .setName(tag)
+                    .setMessage(title)
+
+                    // required for edit mode (moving rather than creating a tag)
+                    .setForceUpdate(true)
+                    .setAnnotated(true)
+
+                    .call();
+
+            refresh();
+
+            switchToEditMode(tag);
+
+            return Try.success(Labels.SAVE_SUCCESSFUL);
         } catch (GitAPIException | IOException e) {
             return Try.failure(e);
         }
@@ -257,24 +287,23 @@ final class StecController implements GigController, StepCaptureController, Step
                 .setStartPoint(tag)
                 .call();
 
-        model.interactionModeProperty().setValue(InteractionMode.capture(Step.UPCOMING_STEP));
+        model.interactionModeProperty().setValue(InteractionMode.capture(Step.UPCOMING_STEP_TAG));
 
         refresh();
     }
 
     @Override
-    public Try<String> switchToEditMode(Step step) {
+    public Try<String> switchToEditMode(String tag) {
         try {
             File dir = model.gigDirProperty().get().getDir();
             Git git = Git.open(dir);
 
-            String tag = step.getTag();
             git.checkout()
                     .setName(tag)
                     .setStartPoint(tag)
                     .call();
 
-            model.interactionModeProperty().set(InteractionMode.edit(step));
+            model.interactionModeProperty().set(InteractionMode.edit(tag));
 
             refresh();
 
@@ -285,12 +314,12 @@ final class StecController implements GigController, StepCaptureController, Step
     }
 
     @Override
-    public Try<String> deleteStep(Step step) {
+    public Try<String> deleteStep(String tag) {
         try {
             File dir = model.gigDirProperty().get().getDir();
             Git git = Git.open(dir);
 
-            git.tagDelete().setTags(step.getTag()).call();
+            git.tagDelete().setTags(tag).call();
 
             switchToCaptureModeImpl(git);
 

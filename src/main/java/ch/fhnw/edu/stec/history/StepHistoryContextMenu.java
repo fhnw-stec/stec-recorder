@@ -15,7 +15,7 @@ final class StepHistoryContextMenu extends ContextMenu {
 
         MenuItem deleteItem = new MenuItem(Labels.DELETE_CONTEXT_MENU_ITEM);
         deleteItem.setOnAction(e -> {
-            Try<String> result = historyController.deleteStep(stepSupplier.get());
+            Try<String> result = historyController.deleteStep(stepSupplier.get().getTag());
             result.onSuccess(notificationController::notifyInfo);
             result.onFailure(error -> notificationController.notifyError(Labels.DELETE_STEP_FAILED, error));
         });

@@ -2,33 +2,33 @@ package ch.fhnw.edu.stec.model;
 
 public abstract class InteractionMode {
 
-    private final Step step;
+    private final String tag;
 
-    private InteractionMode(Step step) {
-        this.step = step;
+    private InteractionMode(String tag) {
+        this.tag = tag;
     }
 
-    public Step getStep() {
-        return step;
+    public String getTag() {
+        return tag;
     }
 
-    public static Capture capture(Step step) {
-        return new Capture(step);
+    public static Capture capture(String tag) {
+        return new Capture(tag);
     }
 
-    public static Edit edit(Step step) {
-        return new Edit(step);
+    public static Edit edit(String tag) {
+        return new Edit(tag);
     }
 
     public static final class Capture extends InteractionMode {
-        private Capture(Step step) {
-            super(step);
+        private Capture(String tag) {
+            super(tag);
         }
     }
 
     public static final class Edit extends InteractionMode {
-        private Edit(Step step) {
-            super(step);
+        private Edit(String tag) {
+            super(tag);
         }
     }
 

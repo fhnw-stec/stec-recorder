@@ -1,6 +1,6 @@
 package ch.fhnw.edu.stec;
 
-import ch.fhnw.edu.stec.capture.StepCaptureView;
+import ch.fhnw.edu.stec.form.StepFormView;
 import ch.fhnw.edu.stec.gig.GigChooserView;
 import ch.fhnw.edu.stec.gig.GigStatusView;
 import ch.fhnw.edu.stec.history.StepHistoryDotView;
@@ -12,7 +12,10 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.TitledPane;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -50,13 +53,14 @@ final class StecView extends VBox {
         return gigPane;
     }
 
-    private static TitledPane createStepCapturePane(StecModel model, StecController controller) {
-        StepCaptureView stepCaptureView = new StepCaptureView(model.titleProperty(), model.descriptionProperty(), controller, controller);
-        stepCaptureView.setMinHeight(0);
-        TitledPane stepCapturePane = new TitledPane(STEP_CAPTURE_SECTION_TITLE, stepCaptureView);
-        stepCapturePane.setMaxHeight(Double.MAX_VALUE);
-        stepCapturePane.setCollapsible(false);
-        return stepCapturePane;
+    private static TitledPane createStepFormPane(StecModel model, StecController controller) {
+        StepFormView stepFormView = new StepFormView(model, controller, controller);
+        stepFormView.setMinHeight(0);
+        TitledPane stepFormPane = new TitledPane(STEP_FORM_SECTION_TITLE, stepFormView);
+
+        stepFormPane.setMaxHeight(Double.MAX_VALUE);
+        stepFormPane.setCollapsible(false);
+        return stepFormPane;
     }
 
     private static VBox createStepHistoryPane(StecModel model, StecController controller) {
@@ -87,7 +91,7 @@ final class StecView extends VBox {
     }
 
     private static SplitPane createStepsPane(StecModel model, StecController controller) {
-        TitledPane stepCapturePane = createStepCapturePane(model, controller);
+        TitledPane stepCapturePane = createStepFormPane(model, controller);
         Pane stepHistoryPane = createStepHistoryPane(model, controller);
 
         SplitPane stepsSplitPane = new SplitPane(stepCapturePane, stepHistoryPane);

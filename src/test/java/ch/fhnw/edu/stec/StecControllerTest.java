@@ -209,7 +209,7 @@ class StecControllerTest {
 
         Step stepToEdit = model.getSteps().get(0);
 
-        Try<String> result = controller.switchToEditMode(stepToEdit);
+        Try<String> result = controller.switchToEditMode(stepToEdit.getTag());
         assertTrue(result.isSuccess());
 
         assertTrue(model.interactionModeProperty().get() instanceof InteractionMode.Edit);

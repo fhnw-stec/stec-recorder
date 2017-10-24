@@ -2,8 +2,11 @@ package ch.fhnw.edu.stec.model;
 
 public final class Step {
 
+    /** Used to identify the next step about to be captured. */
+    public static final String UPCOMING_STEP_TAG = "upcoming-step-tag";
+
     /** Represents the next step about to be captured. */
-    public static final Step UPCOMING_STEP = new Step("", "", "");
+    public static final Step UPCOMING_STEP = new Step(UPCOMING_STEP_TAG, "", "");
 
     private final String tag;
     private final String title;

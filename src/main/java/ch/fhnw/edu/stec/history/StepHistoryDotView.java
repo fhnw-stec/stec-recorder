@@ -16,6 +16,7 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -26,13 +27,14 @@ import java.util.Collections;
 public final class StepHistoryDotView extends Region {
 
     private static final int PADDING_X = 5;
-    private static final int DOT_RADIUS = 10;
+    private static final int DOT_RADIUS = 15;
     private static final int DOT_DEFAULT_SPACING = 3 * DOT_RADIUS;
     private static final Color DOT_DEFAULT_FILL = Color.web("#039ED366"); // official JavaFX blue (see modena.css)
     private static final Color DOT_BEING_EDITED_STROKE = Color.BLACK;
     private static final Color DOT_DEFAULT_STROKE = Color.TRANSPARENT;
     private static final Color DOT_UPCOMPING_FILL = Color.TRANSPARENT;
     private static final double SLIGHTLY_VISIBLE = 0.2;
+    private static final double PLUS_GLYPH_SCALE_FACTOR = 1.5;
 
     public StepHistoryDotView(StepHistoryModel model, StepHistoryController historyController, NotificationController notificationController) {
         setMinHeight(3 * DOT_RADIUS);
@@ -66,9 +68,11 @@ public final class StepHistoryDotView extends Region {
             circle.setOnMouseExited(e -> updateStroke(circle, model.isBeingEdited(step)));
 
             circle.setOnMouseClicked(e -> {
-                Try<String> result = historyController.switchToEditMode(step);
-                result.onSuccess(notificationController::notifyInfo);
-                result.onFailure(error -> notificationController.notifyError(Labels.CHECKOUT_FAILED, error));
+                if (e.getButton().equals(MouseButton.PRIMARY)) {
+                    Try<String> result = historyController.switchToEditMode(step.getTag());
+                    result.onSuccess(notificationController::notifyInfo);
+                    result.onFailure(error -> notificationController.notifyError(Labels.CHECKOUT_FAILED, error));
+                }
             });
 
             ContextMenu contextMenu = new StepHistoryContextMenu(() -> step, historyController, notificationController);
@@ -82,6 +86,8 @@ public final class StepHistoryDotView extends Region {
         NumberBinding x = dx.multiply(existingStepCount).add(DOT_RADIUS).add(PADDING_X);
 
         Glyph plus = Glyphs.PLUS;
+        plus.setScaleX(PLUS_GLYPH_SCALE_FACTOR);
+        plus.setScaleY(PLUS_GLYPH_SCALE_FACTOR);
         plus.translateXProperty().bind(x.subtract(plus.widthProperty().divide(2)));
         plus.translateYProperty().bind(y.subtract(plus.heightProperty().divide(2)));
 

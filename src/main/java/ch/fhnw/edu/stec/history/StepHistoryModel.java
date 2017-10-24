@@ -13,7 +13,7 @@ public interface StepHistoryModel {
 
     default boolean isBeingEdited(Step step) {
         return (interactionModeProperty().get() instanceof InteractionMode.Edit) &&
-                interactionModeProperty().get().getStep().getTag().equals(step.getTag());
+                interactionModeProperty().get().getTag().equals(step.getTag());
     }
 
 }

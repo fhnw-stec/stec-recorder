@@ -1,10 +1,13 @@
 package ch.fhnw.edu.stec;
 
+import ch.fhnw.edu.stec.form.StepFormModel;
 import ch.fhnw.edu.stec.history.StepHistoryModel;
-import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.GigDir;
+import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.notification.Notification;
+import io.vavr.collection.List;
+import io.vavr.control.Option;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -12,7 +15,7 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-public final class StecModel implements StepHistoryModel {
+public final class StecModel implements StepFormModel, StepHistoryModel {
 
     private final ObservableList<Notification> notifications = FXCollections.observableArrayList();
 
@@ -34,6 +37,15 @@ public final class StecModel implements StepHistoryModel {
         return steps;
     }
 
+    @Override
+    public Option<Step> getStepByTag(String tag) {
+        if (Step.UPCOMING_STEP_TAG.equals(tag)) {
+            return Option.of(Step.UPCOMING_STEP);
+        } else {
+            return List.ofAll(steps).find(step -> step.getTag().equals(tag));
+        }
+    }
+
     ObservableList<Notification> getNotifications() {
         return notifications;
     }
@@ -43,11 +55,13 @@ public final class StecModel implements StepHistoryModel {
         return interactionMode;
     }
 
-    StringProperty titleProperty() {
+    @Override
+    public StringProperty titleProperty() {
         return title;
     }
 
-    StringProperty descriptionProperty() {
+    @Override
+    public StringProperty descriptionProperty() {
         return description;
     }
 

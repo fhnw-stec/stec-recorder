@@ -11,7 +11,8 @@ public interface Glyphs {
 
     Glyph REFRESH = FONT_AWESOME.create(FontAwesome.Glyph.REFRESH);
     Glyph CAMERA = FONT_AWESOME.create(FontAwesome.Glyph.CAMERA);
-
     Glyph PLUS = FONT_AWESOME.create(FontAwesome.Glyph.PLUS);
+    Glyph SAVE = FONT_AWESOME.create(FontAwesome.Glyph.SAVE);
+    Glyph RESET = FONT_AWESOME.create(FontAwesome.Glyph.UNDO);
 
 }
