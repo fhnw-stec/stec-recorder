@@ -1,12 +1,11 @@
 package ch.fhnw.edu.stec;
 
-import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.GigDir;
+import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.Step;
 import io.vavr.collection.List;
 import io.vavr.control.Try;
 import javafx.collections.ObservableList;
-import javafx.stage.Stage;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;

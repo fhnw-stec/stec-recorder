@@ -15,7 +15,7 @@ public interface Labels {
 
     String STEP_TITLE_PROMPT = "Step Title";
     String STEP_DESCRIPTION_PROMPT = "Step Description (AsciiDoc)";
-    String STEP_CAPTURE_BUTTON_LABEL = "Capture";
+    String CAPTURE_BUTTON_LABEL = "Capture";
     String PREVIEW = "Preview";
 
     String COMMIT_MSG = "Captured with https://github.com/fhnw-stec/stec-recorder";
@@ -39,6 +39,7 @@ public interface Labels {
     String ENTERING_CAPTURE_MODE_SUCCESSFUL = "Ready for a next step";
     String ENTERING_CAPTURE_MODE_FAILED = "Entering capture mode failed";
 
-    String SAVE = "Save";
-    String RESET = "Reset";
+    String SAVE_BUTTON_LABEL = "Save";
+    String RESET_BUTTON_LABEL = "Reset";
+
 }

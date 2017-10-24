@@ -17,6 +17,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.web.WebView;
+import org.controlsfx.glyphfont.FontAwesome;
 
 import static ch.fhnw.edu.stec.util.Labels.*;
 
@@ -96,7 +97,7 @@ public final class StepFormView extends VBox {
     }
 
     private Pane createEditButtonButtonPane(StepFormModel model, StepFormController formController, NotificationController notificationController, TextField titleTextField, TextArea descriptionField) {
-        Button saveButton = new Button(Labels.SAVE, Glyphs.SAVE);
+        Button saveButton = new Button(Labels.SAVE_BUTTON_LABEL, Glyphs.FONT_AWESOME.create(FontAwesome.Glyph.SAVE));
         saveButton.setOnAction(e -> {
             String tag = model.interactionModeProperty().get().getTag();
             Try<String> result = formController.saveStep(tag, titleTextField.getText(), descriptionField.getText());
@@ -104,7 +105,7 @@ public final class StepFormView extends VBox {
             result.onFailure(t -> notificationController.notifyError(Labels.SAVE_FAILED, t));
         });
 
-        Button resetButton = new Button(Labels.RESET, Glyphs.RESET);
+        Button resetButton = new Button(Labels.RESET_BUTTON_LABEL, Glyphs.FONT_AWESOME.create(FontAwesome.Glyph.UNDO));
         resetButton.setOnAction(e -> {
             String tag = model.interactionModeProperty().get().getTag();
             Option<Step> stepOption = model.getStepByTag(tag);
@@ -120,7 +121,7 @@ public final class StepFormView extends VBox {
     }
 
     private Button createCaptureButton(StepFormController formController, NotificationController notificationController, TextField titleTextField, TextArea descriptionField) {
-        Button captureButton = new Button(STEP_CAPTURE_BUTTON_LABEL, Glyphs.CAMERA);
+        Button captureButton = new Button(CAPTURE_BUTTON_LABEL, Glyphs.FONT_AWESOME.create(FontAwesome.Glyph.CAMERA));
         captureButton.setMaxHeight(Double.MAX_VALUE);
         captureButton.setMaxWidth(Double.MAX_VALUE);
 

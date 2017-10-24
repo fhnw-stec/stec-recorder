@@ -3,7 +3,7 @@ package ch.fhnw.edu.stec.history;
 import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.notification.NotificationController;
-import ch.fhnw.edu.stec.util.Glyphs;
+import ch.fhnw.edu.stec.util.DotPlus;
 import ch.fhnw.edu.stec.util.Labels;
 import io.vavr.collection.List;
 import io.vavr.control.Try;
@@ -12,7 +12,6 @@ import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.NumberBinding;
 import javafx.collections.ListChangeListener;
 import javafx.scene.Cursor;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Tooltip;
@@ -20,7 +19,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import org.controlsfx.glyphfont.Glyph;
 
 import java.util.Collections;
 
@@ -32,9 +30,7 @@ public final class StepHistoryDotView extends Region {
     private static final Color DOT_DEFAULT_FILL = Color.web("#039ED366"); // official JavaFX blue (see modena.css)
     private static final Color DOT_BEING_EDITED_STROKE = Color.BLACK;
     private static final Color DOT_DEFAULT_STROKE = Color.TRANSPARENT;
-    private static final Color DOT_UPCOMPING_FILL = Color.TRANSPARENT;
-    private static final double SLIGHTLY_VISIBLE = 0.2;
-    private static final double PLUS_GLYPH_SCALE_FACTOR = 1.5;
+    private static final double SLIGHTLY_VISIBLE = 0.15;
 
     public StepHistoryDotView(StepHistoryModel model, StepHistoryController historyController, NotificationController notificationController) {
         setMinHeight(3 * DOT_RADIUS);
@@ -83,43 +79,28 @@ public final class StepHistoryDotView extends Region {
     }
 
     private static Node createPlusDot(StepHistoryController historyController, NotificationController notificationController, DoubleBinding y, NumberBinding dx, int existingStepCount) {
-        NumberBinding x = dx.multiply(existingStepCount).add(DOT_RADIUS).add(PADDING_X);
-
-        Glyph plus = Glyphs.PLUS;
-        plus.setScaleX(PLUS_GLYPH_SCALE_FACTOR);
-        plus.setScaleY(PLUS_GLYPH_SCALE_FACTOR);
-        plus.translateXProperty().bind(x.subtract(plus.widthProperty().divide(2)));
-        plus.translateYProperty().bind(y.subtract(plus.heightProperty().divide(2)));
-
-        Circle circle = createUpcomingStepDot(y, dx, existingStepCount);
-
-        Group group = new Group(plus, circle);
-        group.setCursor(Cursor.HAND);
+        DotPlus dotPlus = createUpcomingStepDot(y, dx, existingStepCount);
 
         // use opacity instead of visibility to keep mouse interactivity
-        group.setOpacity(SLIGHTLY_VISIBLE);
-        group.setOnMouseEntered(e -> group.setOpacity(1));
-        group.setOnMouseExited(e -> group.setOpacity(SLIGHTLY_VISIBLE));
+        dotPlus.setOpacity(SLIGHTLY_VISIBLE);
+        dotPlus.setOnMouseEntered(e -> dotPlus.setOpacity(1));
+        dotPlus.setOnMouseExited(e -> dotPlus.setOpacity(SLIGHTLY_VISIBLE));
 
-        group.setOnMouseClicked(e -> {
+        dotPlus.setOnMouseClicked(e -> {
             Try<String> result = historyController.switchToCaptureMode();
             result.onSuccess(notificationController::notifyInfo);
             result.onFailure(error -> notificationController.notifyError(Labels.ENTERING_CAPTURE_MODE_FAILED, error));
         });
 
-        return group;
+        return dotPlus;
     }
 
-    private static Circle createUpcomingStepDot(DoubleBinding y, NumberBinding dx, int existingStepCount) {
+    private static DotPlus createUpcomingStepDot(DoubleBinding y, NumberBinding dx, int existingStepCount) {
         NumberBinding x = dx.multiply(existingStepCount).add(DOT_RADIUS).add(PADDING_X);
-
-        Circle circle = new Circle(DOT_RADIUS, DOT_UPCOMPING_FILL);
-        circle.setStroke(DOT_BEING_EDITED_STROKE);
-        circle.centerXProperty().bind(x);
-        circle.centerYProperty().bind(y);
-        circle.setCursor(Cursor.HAND);
-
-        return circle;
+        DotPlus dotPlus = new DotPlus(DOT_RADIUS);
+        dotPlus.translateXProperty().bind(x);
+        dotPlus.translateYProperty().bind(y);
+        return dotPlus;
     }
 
     private static void updateStroke(Circle circle, boolean isBeingEdited) {
@@ -128,7 +109,6 @@ public final class StepHistoryDotView extends Region {
         } else {
             circle.setStroke(DOT_DEFAULT_STROKE);
         }
-
     }
 
     private java.util.List<? extends Node> createDots(StepHistoryModel model, StepHistoryController historyController, NotificationController notificationController) {

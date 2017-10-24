@@ -21,6 +21,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
+import org.controlsfx.control.StatusBar;
+import org.controlsfx.glyphfont.FontAwesome;
 
 import static ch.fhnw.edu.stec.util.Labels.*;
 
@@ -39,7 +41,9 @@ final class StecView extends VBox {
 
         VBox.setVgrow(stepsPane, Priority.ALWAYS);
 
-        getChildren().addAll(gigPane, stepsPane);
+        StatusBar statusBar = createStatusBar(model);
+
+        getChildren().addAll(gigPane, stepsPane, statusBar);
 
     }
 
@@ -70,7 +74,7 @@ final class StecView extends VBox {
         stepHistoryPane.setMaxHeight(Double.MAX_VALUE);
         stepHistoryPane.setCollapsible(false);
 
-        Button refreshButton = new Button("", Glyphs.REFRESH);
+        Button refreshButton = new Button("", Glyphs.FONT_AWESOME.create(FontAwesome.Glyph.REFRESH));
         refreshButton.setTooltip(new Tooltip(Labels.REFRESH_BUTTON_TOOLTIP));
         refreshButton.setOnAction(e -> controller.refresh());
 
@@ -102,4 +106,12 @@ final class StecView extends VBox {
 
         return stepsSplitPane;
     }
+
+    private static StatusBar createStatusBar(StecModel model) {
+        StatusBar statusBar = new StatusBar();
+        statusBar.setText(""); // purge the default of showing OK
+        Bindings.bindContentBidirectional(statusBar.getLeftItems(), model.getStatusBarLeftItems());
+        return statusBar;
+    }
+
 }

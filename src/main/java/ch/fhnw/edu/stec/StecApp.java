@@ -1,6 +1,7 @@
 package ch.fhnw.edu.stec;
 
 import ch.fhnw.edu.stec.notification.NotificationPopupDispatcher;
+import ch.fhnw.edu.stec.status.StatusBarController;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -30,6 +31,17 @@ public final class StecApp extends Application {
         }
     }
 
+    private static String getVersionSuffix() {
+        try {
+            InputStream versionAsStream = StecApp.class.getResourceAsStream("/version.txt");
+            String version = new Scanner(versionAsStream).useDelimiter("\\A").next();
+            return " – " + version;
+        } catch (Throwable t) {
+            // Expected to fail if not launched from JAR (e.g. inside IDE)
+        }
+        return "";
+    }
+
     @Override
     public void start(Stage stage) {
 
@@ -39,6 +51,7 @@ public final class StecApp extends Application {
         Scene scene = new Scene(view);
 
         model.getNotifications().addListener(new NotificationPopupDispatcher(stage));
+        model.interactionModeProperty().addListener(new StatusBarController(model));
 
         stage.setTitle(TITLE + getVersionSuffix());
         stage.setScene(scene);
@@ -52,17 +65,6 @@ public final class StecApp extends Application {
         });
 
         stage.show();
-    }
-
-    private static String getVersionSuffix() {
-        try {
-            InputStream versionAsStream = StecApp.class.getResourceAsStream("/version.txt");
-            String version = new Scanner(versionAsStream).useDelimiter("\\A").next();
-            return " – " + version;
-        } catch (Throwable t) {
-            // Expected to fail if not launched from JAR (e.g. inside IDE)
-        }
-        return "";
     }
 
 }

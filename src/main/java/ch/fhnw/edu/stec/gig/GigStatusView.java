@@ -1,6 +1,7 @@
 package ch.fhnw.edu.stec.gig;
 
 import ch.fhnw.edu.stec.model.GigDir;
+import ch.fhnw.edu.stec.util.Glyphs;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.StringBinding;
@@ -11,6 +12,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.paint.Color;
+import org.controlsfx.glyphfont.FontAwesome;
 
 import static ch.fhnw.edu.stec.util.Labels.*;
 
@@ -25,7 +27,7 @@ public final class GigStatusView extends BorderPane {
         label.textProperty().bind(dynamicLabel(gigDirProperty));
         label.textFillProperty().bind(dynamicColor(gigDirProperty));
 
-        Button button = new Button(INIT_BUTTON_LABEL);
+        Button button = new Button(INIT_BUTTON_LABEL, Glyphs.FONT_AWESOME.create(FontAwesome.Glyph.GIT_SQUARE));
         button.visibleProperty().bind(Bindings.createBooleanBinding(() -> gigDirProperty.get() instanceof GigDir.UninitializedGigDir, gigDirProperty));
         button.setOnAction(e -> controller.initGig());
 
