@@ -4,32 +4,42 @@ import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.notification.NotificationController;
 import ch.fhnw.edu.stec.util.DotPlus;
+import ch.fhnw.edu.stec.util.Glyphs;
 import ch.fhnw.edu.stec.util.Labels;
 import io.vavr.collection.List;
 import io.vavr.control.Try;
-import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.NumberBinding;
 import javafx.collections.ListChangeListener;
 import javafx.scene.Cursor;
+import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import org.controlsfx.glyphfont.FontAwesome;
+import org.controlsfx.glyphfont.Glyph;
 
 import java.util.Collections;
 
+import static javafx.beans.binding.Bindings.createBooleanBinding;
+import static javafx.beans.binding.Bindings.min;
+
 public final class StepHistoryDotView extends Region {
 
-    private static final int PADDING_X = 5;
+    private static final int PADDING_X = 8;
+
     private static final int DOT_RADIUS = 15;
     private static final int DOT_DEFAULT_SPACING = 3 * DOT_RADIUS;
     private static final Color DOT_DEFAULT_FILL = Color.web("#039ED366"); // official JavaFX blue (see modena.css)
     private static final Color DOT_BEING_EDITED_STROKE = Color.BLACK;
     private static final Color DOT_DEFAULT_STROKE = Color.TRANSPARENT;
+
+    private static final Color TRASH_FILL = Color.DARKRED;
+
     private static final double SLIGHTLY_VISIBLE = 0.15;
 
     public StepHistoryDotView(StepHistoryModel model, StepHistoryController historyController, NotificationController notificationController) {
@@ -71,10 +81,26 @@ public final class StepHistoryDotView extends Region {
                 }
             });
 
-            ContextMenu contextMenu = new StepHistoryContextMenu(() -> step, historyController, notificationController);
-            circle.setOnContextMenuRequested(e -> contextMenu.show(circle, e.getScreenX(), e.getScreenY()));
+            Glyph trash = Glyphs.FONT_AWESOME.create(FontAwesome.Glyph.TRASH);
+            trash.setColor(TRASH_FILL);
+            trash.setCursor(Cursor.HAND);
 
-            return circle;
+            trash.translateXProperty().bind(circle.centerXProperty().add(0.6 * DOT_RADIUS));
+            trash.translateYProperty().bind(circle.centerYProperty().subtract(1.8 * DOT_RADIUS));
+
+            BooleanBinding isActiveStep = createBooleanBinding(() -> model.interactionModeProperty().get().getTag().equals(step.getTag()), model.interactionModeProperty());
+            trash.visibleProperty().bind(isActiveStep);
+            trash.setOpacity(SLIGHTLY_VISIBLE);
+            trash.setOnMouseEntered(e -> trash.setOpacity(1));
+            trash.setOnMouseExited(e -> trash.setOpacity(SLIGHTLY_VISIBLE));
+
+            trash.setOnMouseClicked(e -> {
+                Try<String> result = historyController.deleteStep(step.getTag());
+                result.onSuccess(notificationController::notifyInfo);
+                result.onFailure(error -> notificationController.notifyError(Labels.DELETE_STEP_FAILED, error));
+            });
+
+            return new Group(circle, trash);
         });
     }
 
@@ -115,7 +141,7 @@ public final class StepHistoryDotView extends Region {
 
         DoubleBinding y = heightProperty().divide(2);
         DoubleBinding maxDx = widthProperty().subtract(2 * DOT_RADIUS).subtract(2 * PADDING_X).divide(model.getSteps().size() - 1);
-        NumberBinding dx = Bindings.min(DOT_DEFAULT_SPACING, maxDx);
+        NumberBinding dx = min(DOT_DEFAULT_SPACING, maxDx);
 
         List<Node> existingSteps = createDotsForExistingSteps(model, historyController, notificationController, y, dx);
 
