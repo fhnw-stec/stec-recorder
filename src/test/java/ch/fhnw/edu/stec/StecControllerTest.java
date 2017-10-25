@@ -3,6 +3,7 @@ package ch.fhnw.edu.stec;
 import ch.fhnw.edu.stec.model.GigDir;
 import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.Step;
+import ch.fhnw.edu.stec.notification.Notification;
 import io.vavr.collection.List;
 import io.vavr.control.Try;
 import javafx.collections.ObservableList;
@@ -41,6 +42,20 @@ class StecControllerTest {
         controller.chooseDirectory(gigDir);
         controller.initGig();
         return controller;
+    }
+
+    @Test
+    void appendNotification() {
+        StecModel model = new StecModel();
+        StecController controller = new StecController(model);
+
+        assertTrue(model.getNotifications().isEmpty());
+
+        Notification notification = Notification.error("test");
+        controller.appendNotification(notification);
+
+        assertFalse(model.getNotifications().isEmpty());
+        assertEquals(notification, model.getNotifications().get(0));
     }
 
     @Test
@@ -213,6 +228,46 @@ class StecControllerTest {
 
         assertEquals(stepToEdit.getTitle(), model.titleProperty().get());
         assertEquals(stepToEdit.getDescription(), model.descriptionProperty().get());
+    }
+
+    @Test
+    void saveStep() throws IOException {
+        File gigDir = tmpFolder.newFolder();
+        StecModel model = new StecModel();
+        StecController controller = createInitializedGig(gigDir, model);
+
+        assertTrue(controller.captureStep("Step 1", "Description of Step 1").isSuccess());
+        assertTrue(controller.captureStep("Step 2", "Description of Step 2").isSuccess());
+        assertTrue(controller.captureStep("Step 3", "Description of Step 3").isSuccess());
+
+        Step step = model.getSteps().get(0);
+
+        final String NEW_TITLE = "New Title";
+        final String NEW_DESCRIPTION = "New Description";
+
+        Try<String> result = controller.saveStep(step.getTag(), NEW_TITLE, NEW_DESCRIPTION);
+        assertTrue(result.isSuccess());
+
+        assertEquals(NEW_TITLE, model.getSteps().get(0).getTitle());
+        assertEquals(NEW_DESCRIPTION, model.getSteps().get(0).getDescription());
+    }
+
+    @Test
+    void deleteStep() throws IOException {
+        File gigDir = tmpFolder.newFolder();
+        StecModel model = new StecModel();
+        StecController controller = createInitializedGig(gigDir, model);
+
+        assertTrue(controller.captureStep("Step 1", "Description of Step 1").isSuccess());
+        assertTrue(controller.captureStep("Step 2", "Description of Step 2").isSuccess());
+        assertTrue(controller.captureStep("Step 3", "Description of Step 3").isSuccess());
+
+        Step step = model.getSteps().get(0);
+
+        Try<String> result = controller.deleteStep(step.getTag());
+        assertTrue(result.isSuccess());
+
+        assertEquals(2, model.getSteps().size());
     }
 
 }
