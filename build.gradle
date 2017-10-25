@@ -7,14 +7,12 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'de.dynamicfiles.projects.gradle.plugins:javafx-gradle-plugin:8.8.2'
         classpath 'ch.netzwerg:gradle-release-plugin:1.2.4'
         classpath "org.junit.platform:junit-platform-gradle-plugin:1.0.0-M6"
     }
 }
 
 apply plugin: 'java'
-apply plugin: 'javafx-gradle-plugin'
 apply plugin: 'ch.netzwerg.release'
 apply plugin: 'application'
 apply plugin: 'org.junit.platform.gradle.plugin'
@@ -29,6 +27,7 @@ repositories {
     mavenCentral()
 }
 
+ext.moduleName = 'ch.fhnw.edu.stec'
 mainClassName = 'ch.fhnw.edu.stec.StecApp'
 
 jar {
@@ -37,7 +36,8 @@ jar {
             attributes(
                     'Main-Class': mainClassName,
                     'Application-Version': version,
-                    'Build-Time': new Date().format("EEE, dd MMM yyyy HH:mm:ss z")
+                    'Build-Time': new Date().format("EEE, dd MMM yyyy HH:mm:ss z"),
+                    'Automatic-Module-Name': moduleName
             )
         }
     }
@@ -49,19 +49,53 @@ jar {
 dependencies {
     compile libraries.vavr
     compile libraries.jgit
-    compile libraries.controlsfx
     compile libraries.slf4j
     compile libraries.log4j
+    compile libraries.controlsfx
+
+    compile('org.asciidoctor:asciidoctorj:1.5.6') {
+        exclude group: 'org.jruby' // not Java 9 ready -> explicitly load a newer one...
+    }
+    compile group: 'org.jruby', name: 'jruby-complete', version: '9.1.13.0'
 
     testCompile libraries.junit
 }
 
-jfx {
-    mainClass = mainClassName
-    vendor = 'STEC'
+// See https://guides.gradle.org/building-java-9-modules
+compileJava {
+    inputs.property("moduleName", moduleName)
+
+    doFirst {
+        options.compilerArgs = [
+                '--module-path', classpath.asPath
+        ]
+        classpath = files()
+    }
+}
+
+task copyRuntimeLibs(type: Copy) {
+    into "$buildDir/runtimeLibs"
+    from configurations.runtime
+}
+
+ext.javaHome = System.getenv('JAVA_HOME')
+
+task link(type: Exec) {
+    dependsOn 'clean'
+    dependsOn 'jar'
+    dependsOn 'copyRuntimeLibs'
+
+    workingDir 'build'
+
+    commandLine "${javaHome}/bin/jlink",
+            '--module-path', "runtimeLibs${File.pathSeparatorChar}libs${File.pathSeparatorChar}${javaHome}/jmods",
+            '--add-modules', 'ch.fhnw.edu.stec',
+            '--launcher', "${moduleName}=${moduleName}/${mainClassName}",
+            '--output', 'dist',
+            '--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages', '--ignore-signing-information', '-v'
 }
 
 release {
-    dependsOn jfxNative
+    dependsOn link
     push = true
 }
