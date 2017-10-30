@@ -36,7 +36,7 @@ final class StecController implements GigController, StepFormController, StepHis
 
     static final String GIT_REPO = ".git";
     static final String GIT_IGNORE_FILE_NAME = ".gitignore";
-    static final String ADD_GIT_IGNORE_COMMIT_MSG = "Add " + GIT_IGNORE_FILE_NAME;
+    static final String INITIAL_STATUS_COMMIT_MSG = "Initial status";
     static final String README_FILE_NAME = "README.adoc";
 
     private static final String STEP_PREFIX = "step-";
@@ -71,18 +71,24 @@ final class StecController implements GigController, StepFormController, StepHis
         }
     }
 
-    private static void commitGitIgnore(Git git) {
+    private static void commitInitialStatus(Git git) {
         try (InputStream gitIgnoreSource = StecController.class.getResourceAsStream(GIT_IGNORE_TEMPLATE_FILE_NAME)) {
             File workTree = git.getRepository().getWorkTree();
 
-            File gitIgnoreTarget = new File(workTree, GIT_IGNORE_FILE_NAME);
-            Files.copy(gitIgnoreSource, gitIgnoreTarget.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            git.add().addFilepattern(GIT_IGNORE_FILE_NAME).call();
+            File gitIgnore = new File(workTree, GIT_IGNORE_FILE_NAME);
+            Files.copy(gitIgnoreSource, gitIgnore.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            File readme = new File(workTree, README_FILE_NAME);
+            if (!readme.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                readme.createNewFile();
+            }
 
-            git.commit().setMessage(ADD_GIT_IGNORE_COMMIT_MSG).call();
+            git.add().addFilepattern(GIT_IGNORE_FILE_NAME).addFilepattern(README_FILE_NAME).call();
+
+            git.commit().setMessage(INITIAL_STATUS_COMMIT_MSG).call();
 
         } catch (IOException | GitAPIException e) {
-            LOG.error("Git commit .gitignore failed.", e);
+            LOG.error("Committing initial status failed.", e);
         }
     }
 
@@ -194,7 +200,7 @@ final class StecController implements GigController, StepFormController, StepHis
             Try<Git> tryInitGit = initGitRepo(dir);
             tryInitGit.onSuccess(git -> {
                 model.gigDirProperty().setValue(new GigDir.ReadyGigDir(dir));
-                commitGitIgnore(git);
+                commitInitialStatus(git);
             });
         }
     }

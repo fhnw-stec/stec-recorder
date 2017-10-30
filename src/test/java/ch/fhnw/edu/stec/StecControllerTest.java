@@ -93,6 +93,7 @@ class StecControllerTest {
     void initGig() throws IOException, GitAPIException {
         File gigDir = tmpFolder.newFolder();
         File gitignoreFile = new File(gigDir, StecController.GIT_IGNORE_FILE_NAME);
+        File readmeFile = new File(gigDir, StecController.README_FILE_NAME);
 
         StecModel model = new StecModel();
         StecController controller = new StecController(model);
@@ -100,16 +101,18 @@ class StecControllerTest {
 
         assertTrue(model.gigDirProperty().get() instanceof GigDir.UninitializedGigDir);
         assertFalse(gitignoreFile.exists());
+        assertFalse(readmeFile.exists());
 
         controller.initGig();
 
         assertTrue(model.gigDirProperty().get() instanceof GigDir.ReadyGigDir);
         assertTrue(gitignoreFile.exists());
+        assertTrue(readmeFile.exists());
 
         File gitRepo = new File(gigDir, StecController.GIT_REPO);
         List<RevCommit> commits = List.ofAll(Git.open(gitRepo).log().call());
         assertEquals(1, commits.size());
-        assertEquals(StecController.ADD_GIT_IGNORE_COMMIT_MSG, commits.get(0).getShortMessage());
+        assertEquals(StecController.INITIAL_STATUS_COMMIT_MSG, commits.get(0).getShortMessage());
     }
 
     @Test
