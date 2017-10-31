@@ -113,22 +113,24 @@ final class StecController implements GigController, StepFormController, StepHis
 
     private static String nextTag(Set<String> existingTags) {
         // assuming a "step-42" format, find highest numerical suffix among existing tags
-        Integer maxIntSuffix = existingTags.map(t -> {
-            String suffix = t.substring(STEP_PREFIX.length());
-            if (suffix.chars().allMatch(Character::isDigit)) {
-                return Integer.parseInt(suffix);
-            } else {
-                return 0;
-            }
-        }).max().getOrElse(0);
+        Integer maxIntSuffix = existingTags.map(StecController::tagToInt).max().getOrElse(0);
         return STEP_PREFIX + (maxIntSuffix + 1);
+    }
+
+    private static Integer tagToInt(String tag) {
+        String suffix = tag.substring(STEP_PREFIX.length());
+        if (suffix.chars().allMatch(Character::isDigit)) {
+            return Integer.parseInt(suffix);
+        } else {
+            return 0;
+        }
     }
 
     private static Seq<Step> loadSteps(Git git) {
         Repository repository = git.getRepository();
         Map<String, Ref> tags = HashMap.ofAll(repository.getTags());
         Seq<Step> steps = tags.flatMap(tag -> loadStep(repository, tag._1, tag._2));
-        return steps.sortBy(Step::getTag);
+        return steps.sortBy(s -> tagToInt(s.getTag()));
     }
 
     private static Try<Step> loadStep(Repository repository, String tagName, Ref tagRef) {
