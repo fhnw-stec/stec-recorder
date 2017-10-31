@@ -140,7 +140,7 @@ final class StecController implements GigController, StepFormController, StepHis
             RevCommit commit = revWalk.parseCommit(tagId);
             String description = loadDescription(repository, commit);
             RevTag revTag = revWalk.parseTag(tagId);
-            Step step = new Step(tagName, revTag.getFullMessage(), description);
+            Step step = new Step(tagName, revTag.getFullMessage().trim(), description);
             return Try.success(step);
         } catch (Throwable t) {
             LOG.error("Loading step details failed", t);
