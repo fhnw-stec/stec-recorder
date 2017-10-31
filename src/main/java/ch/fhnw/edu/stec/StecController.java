@@ -41,6 +41,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
+import static ch.fhnw.edu.stec.model.StepDiffEntry.FileChangeType.*;
 import static io.vavr.API.*;
 
 final class StecController implements GigController, StepFormController, StepHistoryController, NotificationController {
@@ -196,14 +197,11 @@ final class StecController implements GigController, StepFormController, StepHis
                     .setNewTree(newTreeIt)
                     .call());
 
-            List<StepDiffEntry> entries = diffEntries.map(e -> {
-                StepDiffEntry.FileChangeType changeType = Match(e.getChangeType()).of(
-                        Case($(DiffEntry.ChangeType.ADD), StepDiffEntry.FileChangeType.ADD),
-                        Case($(DiffEntry.ChangeType.DELETE), StepDiffEntry.FileChangeType.DELETE),
-                        Case($(), StepDiffEntry.FileChangeType.MODIFY) // modify/rename/copy all map to modify
-                );
-                return new StepDiffEntry(changeType, new File(dir, e.getNewPath()));
-            });
+            List<StepDiffEntry> entries = diffEntries.map(e -> Match(e.getChangeType()).of(
+                    Case($(DiffEntry.ChangeType.ADD), new StepDiffEntry(ADD, new File(dir, e.getNewPath()))),
+                    Case($(DiffEntry.ChangeType.DELETE), new StepDiffEntry(DELETE, new File(dir, e.getOldPath()))),
+                    Case($(), new StepDiffEntry(MODIFY, new File(dir, e.getNewPath()))) // modify/rename/copy all map to modify
+            ));
 
             return Try.success(entries);
         } catch (Throwable t) {
