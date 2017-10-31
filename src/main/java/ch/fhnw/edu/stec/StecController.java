@@ -6,18 +6,27 @@ import ch.fhnw.edu.stec.history.StepHistoryController;
 import ch.fhnw.edu.stec.model.GigDir;
 import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.Step;
+import ch.fhnw.edu.stec.model.StepDiffEntry;
 import ch.fhnw.edu.stec.notification.Notification;
 import ch.fhnw.edu.stec.notification.NotificationController;
 import ch.fhnw.edu.stec.util.Labels;
 import io.vavr.collection.*;
+import io.vavr.collection.List;
+import io.vavr.collection.Map;
+import io.vavr.collection.Seq;
+import io.vavr.collection.Set;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTag;
+import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.treewalk.AbstractTreeIterator;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.util.FS;
@@ -31,6 +40,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+
+import static io.vavr.API.*;
 
 final class StecController implements GigController, StepFormController, StepHistoryController, NotificationController {
 
@@ -54,7 +65,15 @@ final class StecController implements GigController, StepFormController, StepHis
             stepOption.forEach(step -> {
                 model.titleProperty().setValue(step.getTitle());
                 model.descriptionProperty().setValue(step.getDescription());
+                model.getStepDiffEntries().clear();
+                if (newValue instanceof InteractionMode.Edit) {
+                    File dir = model.gigDirProperty().get().getDir();
+                    Try<List<StepDiffEntry>> tryStepDiffEntries = loadStepDiff(dir, step.getTag(), List.ofAll(model.getSteps()));
+                    tryStepDiffEntries.onSuccess(entries -> model.getStepDiffEntries().setAll(entries.toJavaList()));
+                    tryStepDiffEntries.onFailure(t -> notifyError(Labels.LOADING_STEP_FILE_CHANGES_FAILED, t));
+                }
             });
+
         });
 
         initModel();
@@ -149,6 +168,63 @@ final class StecController implements GigController, StepFormController, StepHis
         }
     }
 
+    private static Try<List<StepDiffEntry>> loadStepDiff(File dir, String focusStepTag, List<Step> steps) {
+        try {
+            Git git = Git.open(dir);
+            Repository repository = git.getRepository();
+
+            int focusStepIndex = steps.zipWithIndex().find(s -> s._1.getTag().equals(focusStepTag)).get()._2;
+
+            if (focusStepIndex == 0) {
+                // TODO: Compare with parent commit (rather than previous step)
+                return Try.success(List.empty());
+            }
+
+            Step previousStep = steps.get(focusStepIndex - 1);
+
+            Map<String, Ref> tags = HashMap.ofAll(repository.getTags());
+            AnyObjectId focusStepCommitId = tags.get(focusStepTag).get().getObjectId();
+            AnyObjectId previousStepCommitId = tags.get(previousStep.getTag()).get().getObjectId();
+
+            AbstractTreeIterator newTreeIt = createTreeIterator(repository, focusStepCommitId);
+            AbstractTreeIterator oldTreeIt = createTreeIterator(repository, previousStepCommitId);
+
+            List<DiffEntry> diffEntries = List.ofAll(git.diff()
+                    .setOldTree(oldTreeIt)
+                    .setNewTree(newTreeIt)
+                    .call());
+
+            List<StepDiffEntry> entries = diffEntries.map(e -> {
+                StepDiffEntry.FileChangeType changeType = Match(e.getChangeType()).of(
+                        Case($(DiffEntry.ChangeType.ADD), StepDiffEntry.FileChangeType.ADD),
+                        Case($(DiffEntry.ChangeType.DELETE), StepDiffEntry.FileChangeType.DELETE),
+                        Case($(), StepDiffEntry.FileChangeType.MODIFY) // modify/rename/copy all map to modify
+                );
+                return new StepDiffEntry(changeType, new File(dir, e.getNewPath()));
+            });
+
+            return Try.success(entries);
+        } catch (Throwable t) {
+            return Try.failure(t);
+        }
+
+    }
+
+    private static AbstractTreeIterator createTreeIterator(Repository repository, AnyObjectId commitId) throws IOException {
+        try (RevWalk walk = new RevWalk(repository)) {
+            RevCommit commit = walk.parseCommit(commitId);
+            RevTree tree = walk.parseTree(commit.getTree().getId());
+
+            CanonicalTreeParser treeParser = new CanonicalTreeParser();
+            try (ObjectReader reader = repository.newObjectReader()) {
+                treeParser.reset(reader, tree.getId());
+            }
+
+            walk.dispose();
+
+            return treeParser;
+        }
+    }
 
     @Override
     public List<Notification> appendNotification(Notification notification) {
@@ -337,5 +413,4 @@ final class StecController implements GigController, StepFormController, StepHis
             return Try.failure(t);
         }
     }
-
 }

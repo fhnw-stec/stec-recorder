@@ -1,0 +1,19 @@
+/*---- StepDiffView ----*/
+
+.diff .list-cell .add {
+    -fx-text-fill: green;
+}
+
+.diff .list-cell .modify {
+    -fx-text-fill: #039ED3; /* official JavaFX blue (see modena.css) */
+}
+
+.diff .list-cell .delete {
+    -fx-text-fill: darkred;
+}
+
+.diff .list-cell .path {
+    -fx-text-fill: grey;
+}
+
+/* TODO: white text for selected row */

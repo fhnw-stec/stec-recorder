@@ -5,6 +5,7 @@ import ch.fhnw.edu.stec.history.StepHistoryModel;
 import ch.fhnw.edu.stec.model.GigDir;
 import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.Step;
+import ch.fhnw.edu.stec.model.StepDiffEntry;
 import ch.fhnw.edu.stec.notification.Notification;
 import ch.fhnw.edu.stec.status.StatusBarModel;
 import io.vavr.collection.List;
@@ -27,6 +28,7 @@ public final class StecModel implements StepFormModel, StepHistoryModel, StatusB
     private final StringProperty description = new SimpleStringProperty();
     private final ObservableList<Node> statusBarLeftItems = FXCollections.observableArrayList();
     private final ObservableList<Node> statusBarRightItems = FXCollections.observableArrayList();
+    private final ObservableList<StepDiffEntry> stepDiffEntries = FXCollections.observableArrayList();
 
     @Override
     public ObjectProperty<GigDir> gigDirProperty() {
@@ -74,6 +76,10 @@ public final class StecModel implements StepFormModel, StepHistoryModel, StatusB
     @Override
     public ObservableList<Node> getStatusBarRightItems() {
         return statusBarRightItems;
+    }
+
+    public ObservableList<StepDiffEntry> getStepDiffEntries() {
+        return stepDiffEntries;
     }
 
 }

@@ -1,5 +1,6 @@
 package ch.fhnw.edu.stec;
 
+import ch.fhnw.edu.stec.diff.StepDiffView;
 import ch.fhnw.edu.stec.form.StepFormView;
 import ch.fhnw.edu.stec.gig.GigChooserView;
 import ch.fhnw.edu.stec.gig.GigStatusView;
@@ -69,8 +70,11 @@ final class StecView extends VBox {
 
     private static VBox createStepHistoryPane(StecModel model, StecController controller) {
         StepHistoryDotView stepHistoryDotView = new StepHistoryDotView(model, controller, controller);
+        StepDiffView stepDiffView = new StepDiffView(model.getStepDiffEntries());
 
-        TitledPane stepHistoryPane = new TitledPane(STEP_HISTORY_SECTION_TITLE, stepHistoryDotView);
+        SplitPane splitPane = new SplitPane(stepHistoryDotView, stepDiffView);
+
+        TitledPane stepHistoryPane = new TitledPane(STEP_HISTORY_SECTION_TITLE, splitPane);
         stepHistoryPane.setMaxHeight(Double.MAX_VALUE);
         stepHistoryPane.setCollapsible(false);
 

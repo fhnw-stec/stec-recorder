@@ -34,12 +34,12 @@ public interface Labels {
     String DELETE_STEP_SUCCESSFUL = "Delete successful";
     String DELETE_STEP_FAILED = "Delete failed";
 
-    String DELETE_CONTEXT_MENU_ITEM = "Delete";
-
     String ENTERING_CAPTURE_MODE_SUCCESSFUL = "Ready for a next step";
     String ENTERING_CAPTURE_MODE_FAILED = "Entering capture mode failed";
 
     String SAVE_BUTTON_LABEL = "Save";
     String RESET_BUTTON_LABEL = "Reset";
+
+    String LOADING_STEP_FILE_CHANGES_FAILED = "Loading step file changes failed";
 
 }
