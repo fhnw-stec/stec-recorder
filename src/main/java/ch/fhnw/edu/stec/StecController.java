@@ -178,19 +178,18 @@ final class StecController implements GigController, StepFormController, StepHis
 
             int focusStepIndex = steps.zipWithIndex().find(s -> s._1.getTag().equals(focusStepTag)).get()._2;
 
-            if (focusStepIndex == 0) {
-                // TODO: Compare with parent commit (rather than previous step)
-                return Try.success(List.empty());
-            }
-
-            Step previousStep = steps.get(focusStepIndex - 1);
-
             Map<String, Ref> tags = HashMap.ofAll(repository.getTags());
             AnyObjectId focusStepCommitId = tags.get(focusStepTag).get().getObjectId();
-            AnyObjectId previousStepCommitId = tags.get(previousStep.getTag()).get().getObjectId();
+            AnyObjectId referenceCommitId;
+
+            if (focusStepIndex == 0) {
+                referenceCommitId = resolveReferenceCommitForFirstStep(repository, focusStepCommitId);
+            } else {
+                referenceCommitId = resolveReferenceCommitForSubsequentSteps(steps, focusStepIndex, tags);
+            }
 
             AbstractTreeIterator newTreeIt = createTreeIterator(repository, focusStepCommitId);
-            AbstractTreeIterator oldTreeIt = createTreeIterator(repository, previousStepCommitId);
+            AbstractTreeIterator oldTreeIt = createTreeIterator(repository, referenceCommitId);
 
             List<DiffEntry> diffEntries = List.ofAll(git.diff()
                     .setOldTree(oldTreeIt)
@@ -208,6 +207,22 @@ final class StecController implements GigController, StepFormController, StepHis
             return Try.failure(t);
         }
 
+    }
+
+    private static AnyObjectId resolveReferenceCommitForSubsequentSteps(List<Step> steps, int focusStepIndex, Map<String, Ref> tags) {
+        AnyObjectId referenceCommitId;
+        Step previousStep = steps.get(focusStepIndex - 1);
+        referenceCommitId = tags.get(previousStep.getTag()).get().getObjectId();
+        return referenceCommitId;
+    }
+
+    private static AnyObjectId resolveReferenceCommitForFirstStep(Repository repository, AnyObjectId focusStepCommitId) throws IOException {
+        AnyObjectId previousStepCommitId;RevWalk walk = new RevWalk(repository);
+        RevCommit focusStepCommit = walk.parseCommit(focusStepCommitId);
+        walk.dispose();
+        RevCommit parentCommit = focusStepCommit.getParent(0);
+        previousStepCommitId = parentCommit.getId();
+        return previousStepCommitId;
     }
 
     private static AbstractTreeIterator createTreeIterator(Repository repository, AnyObjectId commitId) throws IOException {
