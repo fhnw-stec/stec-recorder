@@ -1,5 +1,21 @@
 /*---- StepDiffView ----*/
 
+.diff .list-cell:filled:selected:focused .add, .diff .list-cell:filled:selected .add {
+    -fx-text-fill: white;
+}
+
+.diff .list-cell:filled:selected:focused .modify, .diff .list-cell:filled:selected .modify {
+    -fx-text-fill: white;
+}
+
+.diff .list-cell:filled:selected:focused .delete, .diff .list-cell:filled:selected .delete {
+    -fx-text-fill: white;
+}
+
+.diff .list-cell:filled:selected:focused .path, .diff .list-cell:filled:selected .path {
+    -fx-text-fill: white;
+}
+
 .diff .list-cell .add {
     -fx-text-fill: green;
 }
@@ -15,5 +31,3 @@
 .diff .list-cell .path {
     -fx-text-fill: grey;
 }
-
-/* TODO: white text for selected row */
