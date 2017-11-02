@@ -1,16 +1,20 @@
 package ch.fhnw.edu.stec.status;
 
-import ch.fhnw.edu.stec.model.ProjectDir;
 import ch.fhnw.edu.stec.model.InteractionMode;
+import ch.fhnw.edu.stec.model.ProjectDir;
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.util.DotPlus;
 import ch.fhnw.edu.stec.util.Glyphs;
+import io.vavr.control.Option;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.text.Text;
 import org.controlsfx.glyphfont.FontAwesome;
 
-public class StatusBarController implements ChangeListener<InteractionMode> {
+import java.util.function.Function;
+
+public class StatusBarController {
 
     private static final int STATUS_BAR_DOT_RADIUS = 8;
 
@@ -22,19 +26,30 @@ public class StatusBarController implements ChangeListener<InteractionMode> {
         this.model.getStatusBarRightItems().clear();
     }
 
-    @Override
-    public void changed(ObservableValue<? extends InteractionMode> observable, InteractionMode oldValue, InteractionMode newValue) {
-        if (!(model.projectDirProperty().get() instanceof ProjectDir.ReadyProjectDir)) {
+    public ChangeListener<InteractionMode> asInteractionModeListener() {
+        return (observable, oldValue, newValue) -> update();
+    }
+
+    public ChangeListener<ProjectDir> asProjectDirListener() {
+        return (observable, oldValue, newValue) -> update();
+    }
+
+    private void update() {
+        update(model.projectDirProperty().get(), model.interactionModeProperty().get(), model.getStatusBarLeftItems(), model::getStepByTag);
+    }
+
+    private static void update(ProjectDir projectDir, InteractionMode interactionMode, ObservableList<Node> statusBarLeftItems, Function<String, Option<Step>> stepByTag) {
+        if (!(projectDir instanceof ProjectDir.ReadyProjectDir)) {
             Text textOne = new Text("Configure your project by specifying the location of a ");
             Text textTwo = new Text(" repository");
-            model.getStatusBarLeftItems().setAll(textOne, Glyphs.FONT_AWESOME.create(FontAwesome.Glyph.GIT_SQUARE), textTwo);
-        } else if (newValue instanceof InteractionMode.Capture) {
+            statusBarLeftItems.setAll(textOne, Glyphs.FONT_AWESOME.create(FontAwesome.Glyph.GIT_SQUARE), textTwo);
+        } else if (interactionMode instanceof InteractionMode.Capture) {
             Text text = new Text("Ready – Capture a step via ");
-            model.getStatusBarLeftItems().setAll(text, Glyphs.FONT_AWESOME.create(FontAwesome.Glyph.CAMERA));
-        } else if (newValue instanceof InteractionMode.Edit) {
-            String stepTitle = model.getStepByTag(newValue.getTag()).map(Step::getTitle).getOrElse("Undefined");
+            statusBarLeftItems.setAll(text, Glyphs.FONT_AWESOME.create(FontAwesome.Glyph.CAMERA));
+        } else if (interactionMode instanceof InteractionMode.Edit) {
+            String stepTitle = stepByTag.apply(interactionMode.getTag()).map(Step::getTitle).getOrElse("Undefined");
             Text text = new Text("Checked out existing step '" + stepTitle + "'. Make edits or continue capturing new steps via ");
-            model.getStatusBarLeftItems().setAll(text, new DotPlus(STATUS_BAR_DOT_RADIUS));
+            statusBarLeftItems.setAll(text, new DotPlus(STATUS_BAR_DOT_RADIUS));
         }
     }
 

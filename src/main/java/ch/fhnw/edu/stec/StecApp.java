@@ -46,13 +46,15 @@ public final class StecApp extends Application {
     public void start(Stage stage) {
 
         StecModel model = new StecModel();
+        StatusBarController statusBarController = new StatusBarController(model);
+        model.interactionModeProperty().addListener(statusBarController.asInteractionModeListener());
+        model.projectDirProperty().addListener(statusBarController.asProjectDirListener());
+        model.getNotifications().addListener(new NotificationPopupDispatcher(stage));
+
         StecController controller = new StecController(model);
         StecView view = new StecView(model, stage.getOwner(), controller);
         Scene scene = new Scene(view);
         scene.getStylesheets().add(this.getClass().getResource("StecApp.css").toExternalForm());
-
-        model.getNotifications().addListener(new NotificationPopupDispatcher(stage));
-        model.interactionModeProperty().addListener(new StatusBarController(model));
 
         stage.setTitle(TITLE + getVersionSuffix());
         stage.setScene(scene);
