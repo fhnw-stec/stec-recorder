@@ -2,7 +2,7 @@ package ch.fhnw.edu.stec;
 
 import ch.fhnw.edu.stec.form.StepFormModel;
 import ch.fhnw.edu.stec.history.StepHistoryModel;
-import ch.fhnw.edu.stec.model.GigDir;
+import ch.fhnw.edu.stec.model.ProjectDir;
 import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.model.StepDiffEntry;
@@ -21,7 +21,7 @@ import javafx.scene.Node;
 public final class StecModel implements StepFormModel, StepHistoryModel, StatusBarModel {
 
     private final ObservableList<Notification> notifications = FXCollections.observableArrayList();
-    private final ObjectProperty<GigDir> gigDir = new SimpleObjectProperty<>();
+    private final ObjectProperty<ProjectDir> projectDir = new SimpleObjectProperty<>();
     private final ObservableList<Step> steps = FXCollections.observableArrayList();
     private final ObjectProperty<InteractionMode> interactionMode = new SimpleObjectProperty<>();
     private final StringProperty title = new SimpleStringProperty();
@@ -31,8 +31,8 @@ public final class StecModel implements StepFormModel, StepHistoryModel, StatusB
     private final ObservableList<StepDiffEntry> stepDiffEntries = FXCollections.observableArrayList();
 
     @Override
-    public ObjectProperty<GigDir> gigDirProperty() {
-        return gigDir;
+    public ObjectProperty<ProjectDir> projectDirProperty() {
+        return projectDir;
     }
 
     @Override

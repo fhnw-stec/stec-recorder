@@ -1,6 +1,6 @@
-package ch.fhnw.edu.stec.gig;
+package ch.fhnw.edu.stec.project;
 
-import ch.fhnw.edu.stec.model.GigDir;
+import ch.fhnw.edu.stec.model.ProjectDir;
 import ch.fhnw.edu.stec.util.Labels;
 import javafx.beans.property.ObjectProperty;
 import javafx.scene.control.Button;
@@ -12,25 +12,25 @@ import javafx.stage.Window;
 
 import java.io.File;
 
-public final class GigChooserView extends HBox {
+public final class ProjectChooserView extends HBox {
 
-    public GigChooserView(ObjectProperty<GigDir> gigDirProperty, Window owner, GigController controller) {
+    public ProjectChooserView(ObjectProperty<ProjectDir> projectDirProperty, Window owner, ProjectController controller) {
 
         setSpacing(5);
 
         TextField rootDirectoryValueField = new TextField();
         rootDirectoryValueField.setEditable(true);
 
-        // binding text property to gig dir property would reset caret on every key press
+        // binding text property to project dir property would reset caret on every key press
 
-        rootDirectoryValueField.setText(gigDirProperty.get().getDir().getAbsolutePath());
+        rootDirectoryValueField.setText(projectDirProperty.get().getDir().getAbsolutePath());
 
         rootDirectoryValueField.textProperty().addListener((observable, oldValue, newValue) -> controller.chooseDirectory(new File(newValue)));
 
         DirectoryChooser directoryChooser = new DirectoryChooser();
 
-        if (!(gigDirProperty.get() instanceof GigDir.InvalidGigDir)) {
-            directoryChooser.setInitialDirectory(gigDirProperty.get().getDir());
+        if (!(projectDirProperty.get() instanceof ProjectDir.InvalidProjectDir)) {
+            directoryChooser.setInitialDirectory(projectDirProperty.get().getDir());
         }
 
         Button chooserButton = new Button(Labels.DIR_CHOOSER_BUTTON_LABEL);

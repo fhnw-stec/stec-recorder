@@ -2,10 +2,10 @@ package ch.fhnw.edu.stec;
 
 import ch.fhnw.edu.stec.diff.StepDiffView;
 import ch.fhnw.edu.stec.form.StepFormView;
-import ch.fhnw.edu.stec.gig.GigChooserView;
-import ch.fhnw.edu.stec.gig.GigStatusView;
+import ch.fhnw.edu.stec.project.ProjectChooserView;
+import ch.fhnw.edu.stec.project.ProjectStatusView;
 import ch.fhnw.edu.stec.history.StepHistoryDotView;
-import ch.fhnw.edu.stec.model.GigDir;
+import ch.fhnw.edu.stec.model.ProjectDir;
 import ch.fhnw.edu.stec.util.Glyphs;
 import ch.fhnw.edu.stec.util.Labels;
 import javafx.beans.binding.Bindings;
@@ -37,25 +37,25 @@ final class StecView extends VBox {
         setPadding(new Insets(5));
         setSpacing(5);
 
-        TitledPane gigPane = createGitPane(model, owner, controller);
+        TitledPane projectPane = createProjectPane(model, owner, controller);
         SplitPane stepsPane = createStepsPane(model, controller);
 
         VBox.setVgrow(stepsPane, Priority.ALWAYS);
 
         StatusBar statusBar = createStatusBar(model);
 
-        getChildren().addAll(gigPane, stepsPane, statusBar);
+        getChildren().addAll(projectPane, stepsPane, statusBar);
 
     }
 
-    private static TitledPane createGitPane(StecModel model, Window owner, StecController controller) {
-        GigChooserView gigChooserView = new GigChooserView(model.gigDirProperty(), owner, controller);
-        GigStatusView gigStatusView = new GigStatusView(model.gigDirProperty(), controller);
-        VBox gigSectionContent = new VBox(5, gigChooserView, gigStatusView);
-        gigSectionContent.setPadding(new Insets(5));
-        TitledPane gigPane = new TitledPane(GIG_SECTION_TITLE, gigSectionContent);
-        gigPane.setCollapsible(false);
-        return gigPane;
+    private static TitledPane createProjectPane(StecModel model, Window owner, StecController controller) {
+        ProjectChooserView projectChooserView = new ProjectChooserView(model.projectDirProperty(), owner, controller);
+        ProjectStatusView projectStatusView = new ProjectStatusView(model.projectDirProperty(), controller);
+        VBox projectSectionContent = new VBox(5, projectChooserView, projectStatusView);
+        projectSectionContent.setPadding(new Insets(5));
+        TitledPane projectPane = new TitledPane(PROJECT_SECTION_TITLE, projectSectionContent);
+        projectPane.setCollapsible(false);
+        return projectPane;
     }
 
     private static TitledPane createStepFormPane(StecModel model, StecController controller) {
@@ -104,8 +104,8 @@ final class StecView extends VBox {
 
         SplitPane stepsSplitPane = new SplitPane(stepCapturePane, stepHistoryPane);
         stepsSplitPane.setOrientation(Orientation.VERTICAL);
-        BooleanBinding gigReady = Bindings.createBooleanBinding(() -> (model.gigDirProperty().get() instanceof GigDir.ReadyGigDir), model.gigDirProperty());
-        stepsSplitPane.disableProperty().bind(gigReady.not());
+        BooleanBinding projectReady = Bindings.createBooleanBinding(() -> (model.projectDirProperty().get() instanceof ProjectDir.ReadyProjectDir), model.projectDirProperty());
+        stepsSplitPane.disableProperty().bind(projectReady.not());
         stepsSplitPane.setDividerPositions(0.85);
 
         return stepsSplitPane;

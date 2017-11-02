@@ -1,6 +1,6 @@
 package ch.fhnw.edu.stec;
 
-import ch.fhnw.edu.stec.model.GigDir;
+import ch.fhnw.edu.stec.model.ProjectDir;
 import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.notification.Notification;
@@ -38,10 +38,10 @@ class StecControllerTest {
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
 
-    private static StecController createInitializedGig(File gigDir, StecModel model) {
+    private static StecController createInitializedProject(File projectDir, StecModel model) {
         StecController controller = new StecController(model);
-        controller.chooseDirectory(gigDir);
-        controller.initGig();
+        controller.chooseDirectory(projectDir);
+        controller.initProject();
         return controller;
     }
 
@@ -65,24 +65,24 @@ class StecControllerTest {
         StecController controller = new StecController(model);
 
         File initialDir = tmpFolder.newFolder("initial");
-        model.gigDirProperty().set(new GigDir.UninitializedGigDir(initialDir));
+        model.projectDirProperty().set(new ProjectDir.UninitializedProjectDir(initialDir));
 
         controller.chooseDirectory(null);
-        assertTrue(model.gigDirProperty().get() instanceof GigDir.InvalidGigDir, "null safety");
-        assertEquals(new File(""), model.gigDirProperty().get().getDir(), "null safety");
+        assertTrue(model.projectDirProperty().get() instanceof ProjectDir.InvalidProjectDir, "null safety");
+        assertEquals(new File(""), model.projectDirProperty().get().getDir(), "null safety");
 
         File invalidDir = tmpFolder.newFile();
         controller.chooseDirectory(invalidDir);
-        assertTrue(model.gigDirProperty().get() instanceof GigDir.InvalidGigDir, "not a directory");
-        assertEquals(invalidDir, model.gigDirProperty().get().getDir(), "null safety");
+        assertTrue(model.projectDirProperty().get() instanceof ProjectDir.InvalidProjectDir, "not a directory");
+        assertEquals(invalidDir, model.projectDirProperty().get().getDir(), "null safety");
 
         File newDir = tmpFolder.newFolder("new");
         controller.chooseDirectory(newDir);
-        assertTrue(model.gigDirProperty().get() instanceof GigDir.UninitializedGigDir);
-        assertEquals(newDir, model.gigDirProperty().get().getDir());
+        assertTrue(model.projectDirProperty().get() instanceof ProjectDir.UninitializedProjectDir);
+        assertEquals(newDir, model.projectDirProperty().get().getDir());
 
-        controller.initGig();
-        assertTrue(model.gigDirProperty().get() instanceof GigDir.ReadyGigDir);
+        controller.initProject();
+        assertTrue(model.projectDirProperty().get() instanceof ProjectDir.ReadyProjectDir);
         controller.captureStep("test-step", "test description");
         assertEquals(1, model.getSteps().size());
 
@@ -91,26 +91,26 @@ class StecControllerTest {
     }
 
     @Test
-    void initGig() throws IOException, GitAPIException {
-        File gigDir = tmpFolder.newFolder();
-        File gitignoreFile = new File(gigDir, StecController.GIT_IGNORE_FILE_NAME);
-        File readmeFile = new File(gigDir, StecController.README_FILE_NAME);
+    void initProject() throws IOException, GitAPIException {
+        File projectDir = tmpFolder.newFolder();
+        File gitignoreFile = new File(projectDir, StecController.GIT_IGNORE_FILE_NAME);
+        File readmeFile = new File(projectDir, StecController.README_FILE_NAME);
 
         StecModel model = new StecModel();
         StecController controller = new StecController(model);
-        controller.chooseDirectory(gigDir);
+        controller.chooseDirectory(projectDir);
 
-        assertTrue(model.gigDirProperty().get() instanceof GigDir.UninitializedGigDir);
+        assertTrue(model.projectDirProperty().get() instanceof ProjectDir.UninitializedProjectDir);
         assertFalse(gitignoreFile.exists());
         assertFalse(readmeFile.exists());
 
-        controller.initGig();
+        controller.initProject();
 
-        assertTrue(model.gigDirProperty().get() instanceof GigDir.ReadyGigDir);
+        assertTrue(model.projectDirProperty().get() instanceof ProjectDir.ReadyProjectDir);
         assertTrue(gitignoreFile.exists());
         assertTrue(readmeFile.exists());
 
-        File gitRepo = new File(gigDir, StecController.GIT_REPO);
+        File gitRepo = new File(projectDir, StecController.GIT_REPO);
         List<RevCommit> commits = List.ofAll(Git.open(gitRepo).log().call());
         assertEquals(1, commits.size());
         assertEquals(INITIAL_STATUS_COMMIT_MSG, commits.get(0).getFullMessage());
@@ -118,12 +118,12 @@ class StecControllerTest {
 
     @Test
     void captureStep() throws IOException {
-        File gigDir = tmpFolder.newFolder();
+        File projectDir = tmpFolder.newFolder();
         StecModel model = new StecModel();
-        StecController controller = createInitializedGig(gigDir, model);
+        StecController controller = createInitializedProject(projectDir, model);
 
         String newFile = "new.txt";
-        assertTrue(new File(gigDir, newFile).createNewFile());
+        assertTrue(new File(projectDir, newFile).createNewFile());
 
         String description = "Description of Step 1";
         Try<String> result = controller.captureStep("Step 1", description);
@@ -132,7 +132,7 @@ class StecControllerTest {
 
         // assert that a README has been created
 
-        File readme = new File(gigDir, README_FILE_NAME);
+        File readme = new File(projectDir, README_FILE_NAME);
         assertTrue(readme.exists());
         String readmeContents = new String(Files.readAllBytes(readme.toPath()));
         assertEquals(description, readmeContents);
@@ -141,7 +141,7 @@ class StecControllerTest {
 
         // assert that a tagged commit representing the step has been created
 
-        Repository repository = Git.open(gigDir).getRepository();
+        Repository repository = Git.open(projectDir).getRepository();
         assertTrue(repository.getTags().containsKey("step-1"));
 
         // assert that the model has been updated accordingly
@@ -164,15 +164,15 @@ class StecControllerTest {
 
     @Test
     void captureStepAutoIncrementTag() throws IOException, GitAPIException {
-        File gigDir = tmpFolder.newFolder();
+        File projectDir = tmpFolder.newFolder();
         StecModel model = new StecModel();
-        StecController controller = createInitializedGig(gigDir, model);
+        StecController controller = createInitializedProject(projectDir, model);
 
         assertTrue(controller.captureStep("Step 1", "Description of Step 1").isSuccess());
         assertTrue(controller.captureStep("Step 2", "Description of Step 2").isSuccess());
         assertTrue(controller.captureStep("Step 3", "Description of Step 3").isSuccess());
 
-        Git git = Git.open(gigDir);
+        Git git = Git.open(projectDir);
         Repository repository = git.getRepository();
         Set<String> tags = repository.getTags().keySet();
 
@@ -189,9 +189,9 @@ class StecControllerTest {
 
     @Test
     void loadSteps() throws IOException {
-        File gigDir = tmpFolder.newFolder();
+        File projectDir = tmpFolder.newFolder();
         StecModel model = new StecModel();
-        StecController controller = createInitializedGig(gigDir, model);
+        StecController controller = createInitializedProject(projectDir, model);
 
         assertTrue(controller.captureStep("Step 1", "Description of Step 1").isSuccess());
         assertTrue(controller.captureStep("Step 2", "Description of Step 2").isSuccess());
@@ -215,9 +215,9 @@ class StecControllerTest {
 
     @Test
     void switchToEditMode() throws IOException {
-        File gigDir = tmpFolder.newFolder();
+        File projectDir = tmpFolder.newFolder();
         StecModel model = new StecModel();
-        StecController controller = createInitializedGig(gigDir, model);
+        StecController controller = createInitializedProject(projectDir, model);
 
         assertTrue(controller.captureStep("Step 1", "Description of Step 1").isSuccess());
         assertTrue(controller.captureStep("Step 2", "Description of Step 2").isSuccess());
@@ -236,9 +236,9 @@ class StecControllerTest {
 
     @Test
     void saveStep() throws IOException {
-        File gigDir = tmpFolder.newFolder();
+        File projectDir = tmpFolder.newFolder();
         StecModel model = new StecModel();
-        StecController controller = createInitializedGig(gigDir, model);
+        StecController controller = createInitializedProject(projectDir, model);
 
         assertTrue(controller.captureStep("Step 1", "Description of Step 1").isSuccess());
         assertTrue(controller.captureStep("Step 2", "Description of Step 2").isSuccess());
@@ -259,9 +259,9 @@ class StecControllerTest {
 
     @Test
     void deleteStep() throws IOException {
-        File gigDir = tmpFolder.newFolder();
+        File projectDir = tmpFolder.newFolder();
         StecModel model = new StecModel();
-        StecController controller = createInitializedGig(gigDir, model);
+        StecController controller = createInitializedProject(projectDir, model);
 
         assertTrue(controller.captureStep("Step 1", "Description of Step 1").isSuccess());
         assertTrue(controller.captureStep("Step 2", "Description of Step 2").isSuccess());

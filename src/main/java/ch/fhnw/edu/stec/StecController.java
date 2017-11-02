@@ -1,9 +1,9 @@
 package ch.fhnw.edu.stec;
 
 import ch.fhnw.edu.stec.form.StepFormController;
-import ch.fhnw.edu.stec.gig.GigController;
+import ch.fhnw.edu.stec.project.ProjectController;
 import ch.fhnw.edu.stec.history.StepHistoryController;
-import ch.fhnw.edu.stec.model.GigDir;
+import ch.fhnw.edu.stec.model.ProjectDir;
 import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.model.StepDiffEntry;
@@ -45,7 +45,7 @@ import static ch.fhnw.edu.stec.util.Labels.*;
 import static io.vavr.API.*;
 import static java.lang.String.format;
 
-final class StecController implements GigController, StepFormController, StepHistoryController, NotificationController {
+final class StecController implements ProjectController, StepFormController, StepHistoryController, NotificationController {
 
     static final String GIT_REPO = ".git";
     static final String GIT_IGNORE_FILE_NAME = ".gitignore";
@@ -61,7 +61,7 @@ final class StecController implements GigController, StepFormController, StepHis
     StecController(StecModel model) {
         this.model = model;
 
-        model.gigDirProperty().addListener((observable, oldValue, newValue) -> refresh());
+        model.projectDirProperty().addListener((observable, oldValue, newValue) -> refresh());
         model.interactionModeProperty().addListener((observable, oldValue, newValue) -> {
             Option<Step> stepOption = model.getStepByTag(newValue.getTag());
             stepOption.forEach(step -> {
@@ -69,7 +69,7 @@ final class StecController implements GigController, StepFormController, StepHis
                 model.descriptionProperty().setValue(step.getDescription());
                 model.getStepDiffEntries().clear();
                 if (newValue instanceof InteractionMode.Edit) {
-                    File dir = model.gigDirProperty().get().getDir();
+                    File dir = model.projectDirProperty().get().getDir();
                     Try<List<StepDiffEntry>> tryStepDiffEntries = loadStepDiff(dir, step.getTag(), List.ofAll(model.getSteps()));
                     tryStepDiffEntries.onSuccess(entries -> model.getStepDiffEntries().setAll(entries.toJavaList()));
                     tryStepDiffEntries.onFailure(t -> notifyError(LOADING_STEP_FILE_CHANGES_FAILED, t));
@@ -246,10 +246,10 @@ final class StecController implements GigController, StepFormController, StepHis
     }
 
     public void refresh() {
-        GigDir gigDir = model.gigDirProperty().get();
-        if (gigDir instanceof GigDir.ReadyGigDir) {
+        ProjectDir projectDir = model.projectDirProperty().get();
+        if (projectDir instanceof ProjectDir.ReadyProjectDir) {
             try {
-                Git git = Git.open(gigDir.getDir());
+                Git git = Git.open(projectDir.getDir());
                 model.getSteps().setAll(loadSteps(git).asJava());
             } catch (IOException e) {
                 LOG.error("Loading existing steps failed", e);
@@ -267,28 +267,28 @@ final class StecController implements GigController, StepFormController, StepHis
     @Override
     public void chooseDirectory(File dir) {
         if (dir == null) {
-            model.gigDirProperty().setValue(new GigDir.InvalidGigDir(new File("")));
+            model.projectDirProperty().setValue(new ProjectDir.InvalidProjectDir(new File("")));
         } else if (!dir.isDirectory()) {
-            model.gigDirProperty().setValue(new GigDir.InvalidGigDir(dir));
+            model.projectDirProperty().setValue(new ProjectDir.InvalidProjectDir(dir));
         } else {
             File gitRepo = new File(dir, GIT_REPO);
             boolean isInitialized = RepositoryCache.FileKey.isGitRepository(gitRepo, FS.detect());
             if (isInitialized) {
-                model.gigDirProperty().setValue(new GigDir.ReadyGigDir(dir));
+                model.projectDirProperty().setValue(new ProjectDir.ReadyProjectDir(dir));
                 switchToCaptureMode();
             } else {
-                model.gigDirProperty().setValue(new GigDir.UninitializedGigDir(dir));
+                model.projectDirProperty().setValue(new ProjectDir.UninitializedProjectDir(dir));
             }
         }
     }
 
     @Override
-    public void initGig() {
-        if (model.gigDirProperty().get() instanceof GigDir.UninitializedGigDir) {
-            File dir = model.gigDirProperty().get().getDir();
+    public void initProject() {
+        if (model.projectDirProperty().get() instanceof ProjectDir.UninitializedProjectDir) {
+            File dir = model.projectDirProperty().get().getDir();
             Try<Git> tryInitGit = initGitRepo(dir);
             tryInitGit.onSuccess(git -> {
-                model.gigDirProperty().setValue(new GigDir.ReadyGigDir(dir));
+                model.projectDirProperty().setValue(new ProjectDir.ReadyProjectDir(dir));
                 commitInitialStatus(git);
             });
         }
@@ -297,7 +297,7 @@ final class StecController implements GigController, StepFormController, StepHis
     @Override
     public Try<String> captureStep(String title, String description) {
         try {
-            File dir = model.gigDirProperty().get().getDir();
+            File dir = model.projectDirProperty().get().getDir();
             Git git = Git.open(dir);
 
             Files.write(new File(dir, README_FILE_NAME).toPath(), description.getBytes());
@@ -331,7 +331,7 @@ final class StecController implements GigController, StepFormController, StepHis
     @Override
     public Try<String> saveStep(String tag, String title, String description) {
         try {
-            File dir = model.gigDirProperty().get().getDir();
+            File dir = model.projectDirProperty().get().getDir();
             Git git = Git.open(dir);
 
             String editBranchName = EDIT_BRANCH_PREFIX + tag;
@@ -365,7 +365,7 @@ final class StecController implements GigController, StepFormController, StepHis
     @Override
     public Try<String> switchToCaptureMode() {
         try {
-            File dir = model.gigDirProperty().get().getDir();
+            File dir = model.projectDirProperty().get().getDir();
             Git git = Git.open(dir);
 
             switchToCaptureModeImpl(git);
@@ -385,7 +385,7 @@ final class StecController implements GigController, StepFormController, StepHis
     @Override
     public Try<String> switchToEditMode(String tag) {
         try {
-            File dir = model.gigDirProperty().get().getDir();
+            File dir = model.projectDirProperty().get().getDir();
             Git git = Git.open(dir);
 
             git.checkout()
@@ -406,7 +406,7 @@ final class StecController implements GigController, StepFormController, StepHis
     @Override
     public Try<String> deleteStep(String tag) {
         try {
-            File dir = model.gigDirProperty().get().getDir();
+            File dir = model.projectDirProperty().get().getDir();
             Git git = Git.open(dir);
 
             git.tagDelete().setTags(tag).call();

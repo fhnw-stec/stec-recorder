@@ -1,6 +1,6 @@
 package ch.fhnw.edu.stec.status;
 
-import ch.fhnw.edu.stec.model.GigDir;
+import ch.fhnw.edu.stec.model.ProjectDir;
 import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.util.DotPlus;
@@ -24,8 +24,8 @@ public class StatusBarController implements ChangeListener<InteractionMode> {
 
     @Override
     public void changed(ObservableValue<? extends InteractionMode> observable, InteractionMode oldValue, InteractionMode newValue) {
-        if (!(model.gigDirProperty().get() instanceof GigDir.ReadyGigDir)) {
-            Text textOne = new Text("Configure your gig by specifying the location of a ");
+        if (!(model.projectDirProperty().get() instanceof ProjectDir.ReadyProjectDir)) {
+            Text textOne = new Text("Configure your project by specifying the location of a ");
             Text textTwo = new Text(" repository");
             model.getStatusBarLeftItems().setAll(textOne, Glyphs.FONT_AWESOME.create(FontAwesome.Glyph.GIT_SQUARE), textTwo);
         } else if (newValue instanceof InteractionMode.Capture) {
