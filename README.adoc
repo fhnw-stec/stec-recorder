@@ -16,7 +16,9 @@ This project is based on Gradle and can thus be imported into most IDEs.
 
 ## Bundle
 
-`./gradle jfxNative` (see https://github.com/FibreFoX/javafx-gradle-plugin[javafx-gradle-plugin])
+WARNING: Make sure that Gradle itself is running with Java 8 (see https://stackoverflow.com/a/21212790/57448)
+
+`./gradlew jfxNative` (see https://github.com/FibreFoX/javafx-gradle-plugin[javafx-gradle-plugin])
 
 ## Release
 
