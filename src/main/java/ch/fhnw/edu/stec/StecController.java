@@ -9,7 +9,6 @@ import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.model.StepDiffEntry;
 import ch.fhnw.edu.stec.notification.Notification;
 import ch.fhnw.edu.stec.notification.NotificationController;
-import ch.fhnw.edu.stec.util.Labels;
 import io.vavr.collection.*;
 import io.vavr.collection.List;
 import io.vavr.collection.Map;
@@ -42,18 +41,20 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
 import static ch.fhnw.edu.stec.model.StepDiffEntry.FileChangeType.*;
+import static ch.fhnw.edu.stec.util.Labels.*;
 import static io.vavr.API.*;
+import static java.lang.String.format;
 
 final class StecController implements GigController, StepFormController, StepHistoryController, NotificationController {
 
     static final String GIT_REPO = ".git";
     static final String GIT_IGNORE_FILE_NAME = ".gitignore";
-    static final String INITIAL_STATUS_COMMIT_MSG = "Initial status";
     static final String README_FILE_NAME = "README.adoc";
 
-    private static final String STEP_PREFIX = "step-";
     private static final Logger LOG = LoggerFactory.getLogger(StecController.class);
+    private static final String STEP_PREFIX = "step-";
     private static final String GIT_IGNORE_TEMPLATE_FILE_NAME = "/gitignore-template.txt";
+    private static final String EDIT_BRANCH_PREFIX = "edit-";
 
     private final StecModel model;
 
@@ -71,7 +72,7 @@ final class StecController implements GigController, StepFormController, StepHis
                     File dir = model.gigDirProperty().get().getDir();
                     Try<List<StepDiffEntry>> tryStepDiffEntries = loadStepDiff(dir, step.getTag(), List.ofAll(model.getSteps()));
                     tryStepDiffEntries.onSuccess(entries -> model.getStepDiffEntries().setAll(entries.toJavaList()));
-                    tryStepDiffEntries.onFailure(t -> notifyError(Labels.LOADING_STEP_FILE_CHANGES_FAILED, t));
+                    tryStepDiffEntries.onFailure(t -> notifyError(LOADING_STEP_FILE_CHANGES_FAILED, t));
                 }
             });
 
@@ -210,19 +211,16 @@ final class StecController implements GigController, StepFormController, StepHis
     }
 
     private static AnyObjectId resolveReferenceCommitForSubsequentSteps(List<Step> steps, int focusStepIndex, Map<String, Ref> tags) {
-        AnyObjectId referenceCommitId;
         Step previousStep = steps.get(focusStepIndex - 1);
-        referenceCommitId = tags.get(previousStep.getTag()).get().getObjectId();
-        return referenceCommitId;
+        return tags.get(previousStep.getTag()).get().getObjectId();
     }
 
     private static AnyObjectId resolveReferenceCommitForFirstStep(Repository repository, AnyObjectId focusStepCommitId) throws IOException {
-        AnyObjectId previousStepCommitId;RevWalk walk = new RevWalk(repository);
+        RevWalk walk = new RevWalk(repository);
         RevCommit focusStepCommit = walk.parseCommit(focusStepCommitId);
         walk.dispose();
         RevCommit parentCommit = focusStepCommit.getParent(0);
-        previousStepCommitId = parentCommit.getId();
-        return previousStepCommitId;
+        return parentCommit.getId();
     }
 
     private static AbstractTreeIterator createTreeIterator(Repository repository, AnyObjectId commitId) throws IOException {
@@ -306,7 +304,7 @@ final class StecController implements GigController, StepFormController, StepHis
 
             git.add().addFilepattern(".").call();
 
-            git.commit().setMessage(Labels.COMMIT_MSG).call();
+            git.commit().setMessage(format(CAPTURE_COMMIT_MSG_TEMPLATE, title)).call();
 
             Set<String> existingTags = HashSet.ofAll(git.getRepository().getTags().keySet());
             String tag = nextTag(existingTags);
@@ -324,7 +322,7 @@ final class StecController implements GigController, StepFormController, StepHis
 
             switchToCaptureModeImpl(git);
 
-            return Try.success(Labels.CAPTURE_SUCCESSFUL);
+            return Try.success(CAPTURE_SUCCESSFUL);
         } catch (GitAPIException | IOException e) {
             return Try.failure(e);
         }
@@ -336,11 +334,13 @@ final class StecController implements GigController, StepFormController, StepHis
             File dir = model.gigDirProperty().get().getDir();
             Git git = Git.open(dir);
 
+            String editBranchName = EDIT_BRANCH_PREFIX + tag;
+            git.branchCreate().setName(editBranchName).setStartPoint(tag).setForce(true).call();
+            git.checkout().setName(editBranchName).call();
+
             Files.write(new File(dir, README_FILE_NAME).toPath(), description.getBytes());
-
             git.add().setUpdate(true).addFilepattern(README_FILE_NAME).call();
-
-            git.commit().setMessage(Labels.COMMIT_MSG).call();
+            git.commit().setMessage(format(EDIT_COMMIT_MSG_TEMPLATE, title)).call();
 
             git.tag()
                     .setName(tag)
@@ -356,7 +356,7 @@ final class StecController implements GigController, StepFormController, StepHis
 
             switchToEditMode(tag);
 
-            return Try.success(Labels.SAVE_SUCCESSFUL);
+            return Try.success(SAVE_SUCCESSFUL);
         } catch (GitAPIException | IOException e) {
             return Try.failure(e);
         }
@@ -370,25 +370,15 @@ final class StecController implements GigController, StepFormController, StepHis
 
             switchToCaptureModeImpl(git);
 
-            return Try.success(Labels.ENTERING_CAPTURE_MODE_SUCCESSFUL);
+            return Try.success(ENTERING_CAPTURE_MODE_SUCCESSFUL);
         } catch (Throwable t) {
             return Try.failure(t);
         }
     }
 
     private void switchToCaptureModeImpl(Git git) throws GitAPIException {
-        refresh();
-
-        Step headStep = model.getSteps().get(model.getSteps().size() - 1);
-        String tag = headStep.getTag();
-
-        git.checkout()
-                .setName(tag)
-                .setStartPoint(tag)
-                .call();
-
+        git.checkout().setName("master").call();
         model.interactionModeProperty().setValue(InteractionMode.capture(Step.UPCOMING_STEP_TAG));
-
         refresh();
     }
 
@@ -407,7 +397,7 @@ final class StecController implements GigController, StepFormController, StepHis
 
             refresh();
 
-            return Try.success(Labels.CHECKOUT_SUCCESSFUL);
+            return Try.success(CHECKOUT_SUCCESSFUL);
         } catch (Throwable t) {
             return Try.failure(t);
         }
@@ -423,7 +413,7 @@ final class StecController implements GigController, StepFormController, StepHis
 
             switchToCaptureModeImpl(git);
 
-            return Try.success(Labels.DELETE_STEP_SUCCESSFUL);
+            return Try.success(DELETE_STEP_SUCCESSFUL);
         } catch (Throwable t) {
             return Try.failure(t);
         }

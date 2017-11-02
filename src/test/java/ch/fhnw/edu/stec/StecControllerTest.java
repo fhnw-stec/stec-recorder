@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.util.Set;
 
 import static ch.fhnw.edu.stec.StecController.README_FILE_NAME;
+import static ch.fhnw.edu.stec.util.Labels.INITIAL_STATUS_COMMIT_MSG;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(ExternalResourceSupport.class)
@@ -112,7 +113,7 @@ class StecControllerTest {
         File gitRepo = new File(gigDir, StecController.GIT_REPO);
         List<RevCommit> commits = List.ofAll(Git.open(gitRepo).log().call());
         assertEquals(1, commits.size());
-        assertEquals(StecController.INITIAL_STATUS_COMMIT_MSG, commits.get(0).getShortMessage());
+        assertEquals(INITIAL_STATUS_COMMIT_MSG, commits.get(0).getFullMessage());
     }
 
     @Test
@@ -249,6 +250,7 @@ class StecControllerTest {
         final String NEW_DESCRIPTION = "New Description";
 
         Try<String> result = controller.saveStep(step.getTag(), NEW_TITLE, NEW_DESCRIPTION);
+        System.out.println(result);
         assertTrue(result.isSuccess());
 
         assertEquals(NEW_TITLE, model.getSteps().get(0).getTitle());

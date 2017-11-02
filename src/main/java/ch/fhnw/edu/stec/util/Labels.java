@@ -18,7 +18,10 @@ public interface Labels {
     String CAPTURE_BUTTON_LABEL = "Capture";
     String PREVIEW = "Preview";
 
-    String COMMIT_MSG = "Captured with https://github.com/fhnw-stec/stec-recorder";
+    String COMMIT_MSG_SUFFIX = "\n\nCaptured with https://github.com/fhnw-stec/stec-recorder";
+    String CAPTURE_COMMIT_MSG_TEMPLATE = "Create Step '%s'" + COMMIT_MSG_SUFFIX;
+    String EDIT_COMMIT_MSG_TEMPLATE = "Edit Step '%s'" + COMMIT_MSG_SUFFIX;
+    String INITIAL_STATUS_COMMIT_MSG = "Initial status" + COMMIT_MSG_SUFFIX;
 
     String REFRESH_BUTTON_TOOLTIP = "Refresh";
 
