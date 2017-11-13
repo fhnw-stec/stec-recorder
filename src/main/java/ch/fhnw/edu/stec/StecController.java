@@ -1,14 +1,14 @@
 package ch.fhnw.edu.stec;
 
 import ch.fhnw.edu.stec.form.StepFormController;
-import ch.fhnw.edu.stec.project.ProjectController;
 import ch.fhnw.edu.stec.history.StepHistoryController;
-import ch.fhnw.edu.stec.model.ProjectDir;
 import ch.fhnw.edu.stec.model.InteractionMode;
+import ch.fhnw.edu.stec.model.ProjectDir;
 import ch.fhnw.edu.stec.model.Step;
 import ch.fhnw.edu.stec.model.StepDiffEntry;
 import ch.fhnw.edu.stec.notification.Notification;
 import ch.fhnw.edu.stec.notification.NotificationController;
+import ch.fhnw.edu.stec.project.ProjectController;
 import io.vavr.collection.*;
 import io.vavr.collection.List;
 import io.vavr.collection.Map;
@@ -39,6 +39,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.function.Consumer;
 
 import static ch.fhnw.edu.stec.model.StepDiffEntry.FileChangeType.*;
 import static ch.fhnw.edu.stec.util.Labels.*;
@@ -60,26 +61,8 @@ final class StecController implements ProjectController, StepFormController, Ste
 
     StecController(StecModel model) {
         this.model = model;
-
         model.projectDirProperty().addListener((observable, oldValue, newValue) -> refresh());
-        model.interactionModeProperty().addListener((observable, oldValue, newValue) -> {
-            Option<Step> stepOption = model.getStepByTag(newValue.getTag());
-            stepOption.forEach(step -> {
-                model.titleProperty().setValue(step.getTitle());
-                model.descriptionProperty().setValue(step.getDescription());
-                model.getStepDiffEntries().clear();
-                if (newValue instanceof InteractionMode.Edit) {
-                    File dir = model.projectDirProperty().get().getDir();
-                    Try<List<StepDiffEntry>> tryStepDiffEntries = loadStepDiff(dir, step.getTag(), List.ofAll(model.getSteps()));
-                    tryStepDiffEntries.onSuccess(entries -> model.getStepDiffEntries().setAll(entries.toJavaList()));
-                    tryStepDiffEntries.onFailure(t -> notifyError(LOADING_STEP_FILE_CHANGES_FAILED, t));
-                }
-            });
-
-        });
-
-        initModel();
-
+        chooseDirectory(new File(System.getProperty("user.home")));
         switchToCaptureMode();
     }
 
@@ -259,11 +242,6 @@ final class StecController implements ProjectController, StepFormController, Ste
         }
     }
 
-    private void initModel() {
-        chooseDirectory(new File(System.getProperty("user.home")));
-        model.interactionModeProperty().setValue(InteractionMode.capture(Step.UPCOMING_STEP_TAG));
-    }
-
     @Override
     public void chooseDirectory(File dir) {
         if (dir == null) {
@@ -378,8 +356,21 @@ final class StecController implements ProjectController, StepFormController, Ste
 
     private void switchToCaptureModeImpl(Git git) throws GitAPIException {
         git.checkout().setName("master").call();
-        model.interactionModeProperty().setValue(InteractionMode.capture(Step.UPCOMING_STEP_TAG));
+        String tag = Step.UPCOMING_STEP_TAG;
+        model.interactionModeProperty().setValue(InteractionMode.capture(tag));
+
+        Option<Step> stepOption = model.getStepByTag(tag);
+        stepOption.forEach(updateStepDetails());
+
         refresh();
+    }
+
+    private Consumer<Step> updateStepDetails() {
+        return step -> {
+            model.titleProperty().setValue(step.getTitle());
+            model.descriptionProperty().setValue(step.getDescription());
+            model.getStepDiffEntries().clear();
+        };
     }
 
     @Override
@@ -394,6 +385,13 @@ final class StecController implements ProjectController, StepFormController, Ste
                     .call();
 
             model.interactionModeProperty().set(InteractionMode.edit(tag));
+            Option<Step> stepOption = model.getStepByTag(tag);
+            stepOption.forEach(updateStepDetails());
+            stepOption.forEach(step -> {
+                Try<List<StepDiffEntry>> tryStepDiffEntries = loadStepDiff(dir, step.getTag(), List.ofAll(model.getSteps()));
+                tryStepDiffEntries.onSuccess(entries -> model.getStepDiffEntries().setAll(entries.toJavaList()));
+                tryStepDiffEntries.onFailure(t -> notifyError(LOADING_STEP_FILE_CHANGES_FAILED, t));
+            });
 
             refresh();
 
@@ -418,4 +416,5 @@ final class StecController implements ProjectController, StepFormController, Ste
             return Try.failure(t);
         }
     }
+
 }
