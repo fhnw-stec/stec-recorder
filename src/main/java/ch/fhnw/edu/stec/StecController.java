@@ -61,6 +61,7 @@ final class StecController implements ProjectController, StepFormController, Ste
 
     StecController(StecModel model) {
         this.model = model;
+        model.interactionModeProperty().setValue(InteractionMode.capture(Step.UPCOMING_STEP_TAG));
         model.projectDirProperty().addListener((observable, oldValue, newValue) -> refresh());
         chooseDirectory(new File(System.getProperty("user.home")));
         switchToCaptureMode();
@@ -282,7 +283,7 @@ final class StecController implements ProjectController, StepFormController, Ste
 
             git.add().addFilepattern(".").call();
 
-            git.commit().setMessage(format(CAPTURE_COMMIT_MSG_TEMPLATE, title)).call();
+            git.commit().setAll(true).setMessage(format(CAPTURE_COMMIT_MSG_TEMPLATE, title)).call();
 
             Set<String> existingTags = HashSet.ofAll(git.getRepository().getTags().keySet());
             String tag = nextTag(existingTags);
@@ -387,11 +388,7 @@ final class StecController implements ProjectController, StepFormController, Ste
             model.interactionModeProperty().set(InteractionMode.edit(tag));
             Option<Step> stepOption = model.getStepByTag(tag);
             stepOption.forEach(updateStepDetails());
-            stepOption.forEach(step -> {
-                Try<List<StepDiffEntry>> tryStepDiffEntries = loadStepDiff(dir, step.getTag(), List.ofAll(model.getSteps()));
-                tryStepDiffEntries.onSuccess(entries -> model.getStepDiffEntries().setAll(entries.toJavaList()));
-                tryStepDiffEntries.onFailure(t -> notifyError(LOADING_STEP_FILE_CHANGES_FAILED, t));
-            });
+            stepOption.forEach(step -> loadStepDiff(dir, step));
 
             refresh();
 
@@ -399,6 +396,12 @@ final class StecController implements ProjectController, StepFormController, Ste
         } catch (Throwable t) {
             return Try.failure(t);
         }
+    }
+
+    private void loadStepDiff(File dir, Step step) {
+        Try<List<StepDiffEntry>> tryStepDiffEntries = loadStepDiff(dir, step.getTag(), List.ofAll(model.getSteps()));
+        tryStepDiffEntries.onSuccess(entries -> model.getStepDiffEntries().setAll(entries.toJavaList()));
+        tryStepDiffEntries.onFailure(t -> notifyError(LOADING_STEP_FILE_CHANGES_FAILED, t));
     }
 
     @Override

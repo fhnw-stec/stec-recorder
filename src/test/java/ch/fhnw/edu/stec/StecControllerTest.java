@@ -1,8 +1,9 @@
 package ch.fhnw.edu.stec;
 
-import ch.fhnw.edu.stec.model.ProjectDir;
 import ch.fhnw.edu.stec.model.InteractionMode;
+import ch.fhnw.edu.stec.model.ProjectDir;
 import ch.fhnw.edu.stec.model.Step;
+import ch.fhnw.edu.stec.model.StepDiffEntry;
 import ch.fhnw.edu.stec.notification.Notification;
 import io.vavr.collection.List;
 import io.vavr.control.Try;
@@ -232,6 +233,67 @@ class StecControllerTest {
 
         assertEquals(stepToEdit.getTitle(), model.titleProperty().get());
         assertEquals(stepToEdit.getDescription(), model.descriptionProperty().get());
+    }
+
+    @Test
+    void stepDiff() throws IOException {
+        File projectDir = tmpFolder.newFolder();
+
+        StecModel model = new StecModel();
+        StecController controller = createInitializedProject(projectDir, model);
+
+        File readmeFile = new File(projectDir, README_FILE_NAME);
+        File fooFile = new File(projectDir, "foo.txt");
+
+        {
+            // create a step with
+            // - one modification (README.adoc)
+            // - one addition (foo.txt)
+
+            assertTrue(fooFile.createNewFile());
+            assertTrue(controller.captureStep("Step 1", "Description of Step 1").isSuccess());
+            Step stepToEdit = model.getSteps().get(0);
+
+            Try<String> result = controller.switchToEditMode(stepToEdit.getTag());
+            assertTrue(result.isSuccess());
+
+            assertEquals(2, model.getStepDiffEntries().size());
+
+            assertEquals(readmeFile, model.getStepDiffEntries().get(0).getFile());
+            assertEquals(StepDiffEntry.FileChangeType.MODIFY, model.getStepDiffEntries().get(0).getFileChangeType());
+
+            assertEquals(fooFile, model.getStepDiffEntries().get(1).getFile());
+            assertEquals(StepDiffEntry.FileChangeType.ADD, model.getStepDiffEntries().get(1).getFileChangeType());
+        }
+
+        {
+            // create a step with
+            // - one modification (README.adoc)
+            // - one addition (bar.txt)
+            // - one deletion (foo.txt)
+
+            File barFile = new File(projectDir, "bar.txt");
+            assertTrue(barFile.createNewFile());
+            assertTrue(fooFile.delete());
+
+            assertTrue(controller.captureStep("Step 2", "Description of Step 2").isSuccess());
+
+            Step stepToEdit = model.getSteps().get(1);
+
+            Try<String> result = controller.switchToEditMode(stepToEdit.getTag());
+            assertTrue(result.isSuccess());
+
+            assertEquals(3, model.getStepDiffEntries().size());
+
+            assertEquals(readmeFile, model.getStepDiffEntries().get(0).getFile());
+            assertEquals(StepDiffEntry.FileChangeType.MODIFY, model.getStepDiffEntries().get(0).getFileChangeType());
+
+            assertEquals(barFile, model.getStepDiffEntries().get(1).getFile());
+            assertEquals(StepDiffEntry.FileChangeType.ADD, model.getStepDiffEntries().get(1).getFileChangeType());
+
+            assertEquals(fooFile, model.getStepDiffEntries().get(2).getFile());
+            assertEquals(StepDiffEntry.FileChangeType.DELETE, model.getStepDiffEntries().get(2).getFileChangeType());
+        }
     }
 
     @Test
