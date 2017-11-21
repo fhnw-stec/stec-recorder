@@ -1,5 +1,6 @@
 package ch.fhnw.edu.stec;
 
+import ch.fhnw.edu.stec.diff.StagingAreaWatcher;
 import ch.fhnw.edu.stec.form.StepFormController;
 import ch.fhnw.edu.stec.history.StepHistoryController;
 import ch.fhnw.edu.stec.model.InteractionMode;
@@ -65,6 +66,9 @@ final class StecController implements ProjectController, StepFormController, Ste
         model.projectDirProperty().addListener((observable, oldValue, newValue) -> refresh());
         chooseDirectory(new File(System.getProperty("user.home")));
         switchToCaptureMode();
+
+        StagingAreaWatcher stagingAreaWatcher = new StagingAreaWatcher(model.projectDirProperty(), model.interactionModeProperty(), model.getStepDiffEntries());
+        stagingAreaWatcher.start();
     }
 
     private static Try<Git> initGitRepo(File dir) {
