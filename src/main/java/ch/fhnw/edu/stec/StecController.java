@@ -10,6 +10,8 @@ import ch.fhnw.edu.stec.model.StepDiffEntry;
 import ch.fhnw.edu.stec.notification.Notification;
 import ch.fhnw.edu.stec.notification.NotificationController;
 import ch.fhnw.edu.stec.project.ProjectController;
+import ch.fhnw.ima.memento.Memento;
+import ch.fhnw.ima.memento.MementoModel;
 import io.vavr.collection.*;
 import io.vavr.collection.List;
 import io.vavr.collection.Map;
@@ -116,11 +118,14 @@ final class StecController implements ProjectController, StepFormController, Ste
         }
     }
 
-    private static Seq<Step> loadSteps(Git git) {
+    private static void loadStepsIntoMementoModel(Git git, MementoModel<Step> mementoModel) {
         Repository repository = git.getRepository();
         Map<String, Ref> tags = HashMap.ofAll(repository.getTags());
         Seq<Step> steps = tags.flatMap(tag -> loadStep(repository, tag._1, tag._2));
-        return steps.sortBy(s -> tagToInt(s.getTag()));
+        Seq<Step> sortedSteps = steps.sortBy(s -> tagToInt(s.getTag()));
+        sortedSteps.forEach(step ->
+                mementoModel.appendToMasterBranch(id -> new Memento<>(id, "", step.getTitle(), step))
+        );
     }
 
     private static Try<Step> loadStep(Repository repository, String tagName, Ref tagRef) {
@@ -235,15 +240,16 @@ final class StecController implements ProjectController, StepFormController, Ste
 
     public void refresh() {
         ProjectDir projectDir = model.projectDirProperty().get();
+        model.getMementoModel().clear();
         if (projectDir instanceof ProjectDir.ReadyProjectDir) {
             try {
                 Git git = Git.open(projectDir.getDir());
-                model.getSteps().setAll(loadSteps(git).asJava());
+                loadStepsIntoMementoModel(git, model.getMementoModel());
             } catch (IOException e) {
                 LOG.error("Loading existing steps failed", e);
             }
         } else {
-            model.getSteps().clear();
+            model.getMementoModel().clear();
         }
     }
 

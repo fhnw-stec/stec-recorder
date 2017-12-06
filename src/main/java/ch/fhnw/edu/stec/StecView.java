@@ -69,7 +69,7 @@ final class StecView extends VBox {
     }
 
     private static VBox createStepHistoryPane(StecModel model, StecController controller) {
-        StepHistoryDotView stepHistoryDotView = new StepHistoryDotView(model, controller, controller);
+        StepHistoryDotView stepHistoryDotView = new StepHistoryDotView(model.getMementoModel(), controller, controller);
         StepDiffView stepDiffView = new StepDiffView(model.getStepDiffEntries());
 
         SplitPane splitPane = new SplitPane(stepHistoryDotView, stepDiffView);

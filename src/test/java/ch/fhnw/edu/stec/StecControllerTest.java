@@ -7,7 +7,6 @@ import ch.fhnw.edu.stec.model.StepDiffEntry;
 import ch.fhnw.edu.stec.notification.Notification;
 import io.vavr.collection.List;
 import io.vavr.control.Try;
-import javafx.collections.ObservableList;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
@@ -198,7 +197,7 @@ class StecControllerTest {
         assertTrue(controller.captureStep("Step 2", "Description of Step 2").isSuccess());
         assertTrue(controller.captureStep("Step 3", "Description of Step 3").isSuccess());
 
-        ObservableList<Step> steps = model.getSteps();
+        List<Step> steps = model.getSteps();
         assertEquals(3, steps.size());
 
         Step firstStep = steps.get(0);
@@ -285,6 +284,11 @@ class StecControllerTest {
 
             assertEquals(3, model.getStepDiffEntries().size());
 
+            model.getStepDiffEntries().forEach(e -> {
+                System.out.println(e.getFileChangeType());
+                System.out.println(e.getFile());
+            });
+
             assertEquals(readmeFile, model.getStepDiffEntries().get(0).getFile());
             assertEquals(StepDiffEntry.FileChangeType.MODIFY, model.getStepDiffEntries().get(0).getFileChangeType());
 
@@ -312,7 +316,6 @@ class StecControllerTest {
         final String NEW_DESCRIPTION = "New Description";
 
         Try<String> result = controller.saveStep(step.getTag(), NEW_TITLE, NEW_DESCRIPTION);
-        System.out.println(result);
         assertTrue(result.isSuccess());
 
         assertEquals(NEW_TITLE, model.getSteps().get(0).getTitle());
