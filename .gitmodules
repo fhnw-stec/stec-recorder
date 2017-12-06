@@ -1,0 +1,3 @@
+[submodule "memento"]
+	path = memento
+	url = https://github.com/fhnw-biomedinf/memento
