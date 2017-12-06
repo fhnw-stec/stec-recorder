@@ -69,6 +69,7 @@ public final class StepFormView extends VBox {
         HBox previewOverlay = new HBox(previewOverlayLabel);
         previewOverlay.setPadding(new Insets(5));
         previewOverlay.setAlignment(Pos.BOTTOM_RIGHT);
+        previewOverlay.setMouseTransparent(true);
 
         SplitPane editor = new SplitPane(descriptionField, new StackPane(preview, previewOverlay));
         editor.setOrientation(Orientation.HORIZONTAL);
