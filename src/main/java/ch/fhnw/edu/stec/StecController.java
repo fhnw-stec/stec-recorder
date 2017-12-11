@@ -3,15 +3,11 @@ package ch.fhnw.edu.stec;
 import ch.fhnw.edu.stec.diff.StagingAreaWatcher;
 import ch.fhnw.edu.stec.form.StepFormController;
 import ch.fhnw.edu.stec.history.StepHistoryController;
-import ch.fhnw.edu.stec.model.InteractionMode;
-import ch.fhnw.edu.stec.model.ProjectDir;
-import ch.fhnw.edu.stec.model.Step;
-import ch.fhnw.edu.stec.model.StepDiffEntry;
+import ch.fhnw.edu.stec.model.*;
 import ch.fhnw.edu.stec.notification.Notification;
 import ch.fhnw.edu.stec.notification.NotificationController;
 import ch.fhnw.edu.stec.project.ProjectController;
-import ch.fhnw.ima.memento.Memento;
-import ch.fhnw.ima.memento.MementoModel;
+import ch.fhnw.ima.memento.*;
 import io.vavr.collection.*;
 import io.vavr.collection.List;
 import io.vavr.collection.Map;
@@ -123,9 +119,15 @@ final class StecController implements ProjectController, StepFormController, Ste
         Map<String, Ref> tags = HashMap.ofAll(repository.getTags());
         Seq<Step> steps = tags.flatMap(tag -> loadStep(repository, tag._1, tag._2));
         Seq<Step> sortedSteps = steps.sortBy(s -> tagToInt(s.getTag()));
-        sortedSteps.forEach(step ->
-                mementoModel.appendToMasterBranch(id -> new Memento<>(id, "", step.getTitle(), step))
-        );
+
+        Iterator<Step> iterator = sortedSteps.iterator();
+        while (iterator.hasNext()) {
+            Step step =  iterator.next();
+            // prevent unnecessary updates by only firing listener upon last memento
+            boolean shouldFire = !iterator.hasNext();
+            Memento<Step> memento = new Memento<>(new Tag(step.getTag()), "", step.getTitle(), step);
+            mementoModel.appendToMasterBranch(() -> new Originator.Capture<>(memento, shouldFire));
+        }
     }
 
     private static Try<Step> loadStep(Repository repository, String tagName, Ref tagRef) {
@@ -265,6 +267,13 @@ final class StecController implements ProjectController, StepFormController, Ste
             if (isInitialized) {
                 model.projectDirProperty().setValue(new ProjectDir.ReadyProjectDir(dir));
                 switchToCaptureMode();
+                if (model.getMementoModel().getAllMementosFlattened().isEmpty()) {
+                    model.getMementoSelectionModel().set(Option.none());
+                } else {
+                    MementoBranchId branchId = model.getMementoModel().getMasterBranchId();
+                    MementoId mementoId = model.getMementoModel().getMementos(branchId).last();
+                    model.getMementoSelectionModel().set(Option.some(new MementoRef(mementoId, branchId)));
+                }
             } else {
                 model.projectDirProperty().setValue(new ProjectDir.UninitializedProjectDir(dir));
             }

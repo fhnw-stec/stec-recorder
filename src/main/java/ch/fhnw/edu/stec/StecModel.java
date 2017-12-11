@@ -1,6 +1,7 @@
 package ch.fhnw.edu.stec;
 
 import ch.fhnw.edu.stec.form.StepFormModel;
+import ch.fhnw.edu.stec.history.StepHistoryModel;
 import ch.fhnw.edu.stec.model.ProjectDir;
 import ch.fhnw.edu.stec.model.InteractionMode;
 import ch.fhnw.edu.stec.model.Step;
@@ -9,6 +10,7 @@ import ch.fhnw.edu.stec.notification.Notification;
 import ch.fhnw.edu.stec.status.StatusBarModel;
 import ch.fhnw.ima.memento.Memento;
 import ch.fhnw.ima.memento.MementoModel;
+import ch.fhnw.ima.memento.MementoRef;
 import io.vavr.collection.List;
 import io.vavr.control.Option;
 import javafx.beans.property.ObjectProperty;
@@ -19,11 +21,12 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 
-public final class StecModel implements StepFormModel, StatusBarModel {
+public final class StecModel implements StepFormModel, StepHistoryModel, StatusBarModel {
 
     private final ObservableList<Notification> notifications = FXCollections.observableArrayList();
     private final ObjectProperty<ProjectDir> projectDir = new SimpleObjectProperty<>();
     private final MementoModel<Step> mementoModel = new MementoModel<>();
+    private final ObjectProperty<Option<MementoRef>> mementoSelectionModel = new SimpleObjectProperty<>(Option.none());
     private final ObjectProperty<InteractionMode> interactionMode = new SimpleObjectProperty<>();
     private final StringProperty title = new SimpleStringProperty();
     private final StringProperty description = new SimpleStringProperty();
@@ -36,8 +39,14 @@ public final class StecModel implements StepFormModel, StatusBarModel {
         return projectDir;
     }
 
+    @Override
     public MementoModel<Step> getMementoModel() {
         return mementoModel;
+    }
+
+    @Override
+    public ObjectProperty<Option<MementoRef>> getMementoSelectionModel() {
+        return mementoSelectionModel;
     }
 
     @Override
