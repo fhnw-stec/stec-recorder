@@ -1,6 +1,8 @@
 package ch.fhnw.edu.stec.util;
 
 import org.asciidoctor.Asciidoctor;
+import org.asciidoctor.Attributes;
+import org.asciidoctor.AttributesBuilder;
 import org.asciidoctor.OptionsBuilder;
 
 import java.util.Map;
@@ -22,7 +24,8 @@ public final class AsciidoctorRenderer {
     }
 
     public String renderToHtml(String asciiDocSource) {
-        Map<String, Object> options = OptionsBuilder.options().docType("book").asMap();
+        Attributes attributes = AttributesBuilder.attributes().sourceHighlighter("coderay").get();
+        Map<String, Object> options = OptionsBuilder.options().docType("book").attributes(attributes).asMap();
         return asciidoctor.render(GITHUB_HACK + asciiDocSource, options);
     }
 

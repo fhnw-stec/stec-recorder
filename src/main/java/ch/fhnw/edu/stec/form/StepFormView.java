@@ -16,6 +16,7 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import org.controlsfx.glyphfont.FontAwesome;
 
@@ -57,11 +58,14 @@ public final class StepFormView extends VBox {
     private static SplitPane createDescriptionEditor(TextArea descriptionField) {
         WebView preview = new WebView();
 
+        WebEngine engine = preview.getEngine();
+        engine.setUserStyleSheetLocation(StepFormView.class.getResource("/asciidoctor.css").toString());
+
         // Creating the renderer is expensive -> must happen outside of listener
         AsciidoctorRenderer renderer = new AsciidoctorRenderer();
         descriptionField.textProperty().addListener(cl -> {
             String html = renderer.renderToHtml(descriptionField.getText());
-            preview.getEngine().loadContent(html);
+            engine.loadContent(html);
         });
 
         Label previewOverlayLabel = new Label(Labels.PREVIEW);
